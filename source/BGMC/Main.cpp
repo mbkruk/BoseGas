@@ -65,7 +65,7 @@ int main(int argc, const char *argv[])
 	po.addOption("","",nullptr,1,
 		[&](const char *arg[])
 		{
-			if(**arg=='-')
+			if (**arg=='-')
 			{
 				std::cerr << "unknown option `" << *arg << "`" << std::endl;
 				return 2;
