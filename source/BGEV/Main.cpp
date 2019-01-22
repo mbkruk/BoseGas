@@ -13,10 +13,12 @@ int main(int argc, const char *argv[])
 	bool help = false;
 	std::vector<std::string> inputFiles;
 	BGEVParameters params;
+	BGEvolution evolution;
 
 	params.particleCount = 1;
 	params.nMax = 0;
 	params.gamma = 1.0;
+	params.batchSize = 1024*1024;
 
 	po.addOption("-h","--help","produce help message",1,[&](const char *[]){help=true;return 0;});
 
@@ -120,6 +122,10 @@ int main(int argc, const char *argv[])
 	std::cerr << "particleCount = " << params.particleCount << std::endl;
 	std::cerr << "Nmax = " << params.nMax << std::endl;
 	std::cerr << "gamma = " << params.gamma << std::endl;
+
+	evolution.create(0.01,params);
+	evolution.evolve(params.batchSize);
+	evolution.destroy();
 
 	return 0;
 }
