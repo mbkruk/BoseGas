@@ -1,11 +1,120 @@
 #include <cstdlib>
+#include <immintrin.h>
+#include <vector>
 
 #include "BGEV.hpp"
+
+__m256d* BGEvolution::derivative(const __m256d *r) 
+{
+	const int_fast32_t baab_length = 2*nMax+1;
+	__m256d baabtab[baab_length];
+
+	//filling baab array
+	double a = (*(r))[0];
+	double b = (*(r))[1];
+	baabtab[nMax] =  _mm256_set_pd(b,a,a,b);
+
+	double c, d;
+	for (int_fast32_t i=1;i<=nMax;++i)
+	{
+		a = (*(r+i))[0];
+		b = (*(r+i))[1];
+		c = (*(r+i))[2];
+		d = (*(r+i))[3];
+		baabtab[i+nMax] =  _mm256_set_pd(b,a,a,b);
+		baabtab[nMax-i] =  _mm256_set_pd(d,c,c,d);
+	}
+
+	//A,B,C,D are used to calculate data for a_k, b_k, a_-k, b_-k
+	__m256d A = _mm256_setzero_pd();
+	__m256d B = _mm256_setzero_pd();
+	__m256d C = _mm256_setzero_pd();
+	__m256d D = _mm256_setzero_pd();
+	__m256d sgn = _mm256_set_pd(-1.0,1.0,1.0,1.0);
+
+	for (int_fast32_t j=0;j<indices[nMax].size();j+=3) //calculate sum for a_0 and b_0
+		{
+			A = A+baabtab[indices[nMax][j]+nMax]*_mm256_permute_pd(baabtab[indices[nMax][j+1]+nMax],0b0110)*
+			_mm256_permute_pd(baabtab[indices[nMax][j+2]+nMax],0b0000)*sgn;
+			B = B+_mm256_permute_pd(baabtab[indices[nMax][j]+nMax],0b0101)*_mm256_permute_pd(baabtab[indices[nMax][j+1]+nMax],0b1001)*
+			_mm256_permute_pd(baabtab[indices[nMax][j+2]+nMax],0b1111)*sgn;
+		}
+
+	a = 2.0*gamma*(A[0]+A[1]+A[2]+A[3]);
+	b = -2.0*gamma*(B[0]+B[1]+B[2]+B[3]);
+	*(pDerivative) = _mm256_set_pd(b,a,b,a);
+
+	for (int_fast32_t i=1;i<=nMax;++i) //calculate  a_i b_i a_-i, b_i 
+	{
+		A = _mm256_setzero_pd();
+		B = _mm256_setzero_pd();
+		C = _mm256_setzero_pd();
+		D = _mm256_setzero_pd();
+		for (int_fast32_t j=0;j<indices[nMax+i].size();j+=3) //calculate sum for a_i and b_i
+		{
+			A = A+baabtab[indices[nMax+i][j]+nMax]*_mm256_permute_pd(baabtab[indices[nMax+i][j+1]+nMax],0b0110)*
+			_mm256_permute_pd(baabtab[indices[nMax+i][j+2]+nMax],0b0000)*sgn;
+			B = B+_mm256_permute_pd(baabtab[indices[nMax+i][j]+nMax],0b0101)*_mm256_permute_pd(baabtab[indices[nMax+i][j+1]+nMax],0b1001)*
+			_mm256_permute_pd(baabtab[indices[nMax+i][j+2]+nMax],0b1111)*sgn;
+		}
+
+		for (int_fast32_t j=0;j<indices[nMax-i].size();j+=3) //calculate sum for a_i and b_i
+		{
+			C = C+baabtab[indices[nMax-i][j]+nMax]*_mm256_permute_pd(baabtab[indices[nMax-i][j+1]+nMax],0b0110)*
+			_mm256_permute_pd(baabtab[indices[nMax-i][j+2]+nMax],0b0000)*sgn;
+			D = D+_mm256_permute_pd(baabtab[indices[nMax-i][j]+nMax],0b0101)*_mm256_permute_pd(baabtab[indices[nMax-i][j+1]+nMax],0b1001)*
+			_mm256_permute_pd(baabtab[indices[nMax-i][j+2]+nMax],0b1111)*sgn;
+		}
+
+		*(pDerivative+i) = _mm256_set_pd((*(r+i))[2]*i*i*(-1.0)-2.0*gamma*(D[0]+D[1]+D[2]+D[3]),(*(r+i))[3]*i*i+2.0*gamma*(C[0]+C[1]+C[2]+C[3]),
+		(*(r+i))[0]*i*i*(-1.0)-2.0*gamma*(B[0]+B[1]+B[2]+B[3]),(*(r+i))[1]*i*i+2.0*gamma*(A[0]+A[1]+A[2]+A[3]));
+	}
+	return pDerivative;
+}
+
+void BGEvolution::rk5()
+{
+	__m256d k1[stride], k2[stride], k3[stride], k4[stride], k5[stride], k6[stride];
+	__m256d s[stride];
+	
+	for (int_fast32_t i=0;i<=nMax;++i)
+		k1[i] = *(derivative(pCurrent)+i)*H;
+	for (int_fast32_t i=0;i<=nMax;++i)
+		s[i] = *(pCurrent+i)+*(k1+i)*b[1];
+ 
+	for (int_fast32_t i=0;i<=nMax;++i)
+		k2[i] = *(derivative(s)+i)*H;
+	for (int_fast32_t i=0;i<=nMax;++i)
+		s[i] = *(pCurrent+i)+*(k1+i)*b[2]+*(k2+i)*b[3];
+
+	for (int_fast32_t i=0;i<=nMax;++i)
+		k3[i] = *(derivative(s)+i)*H;
+	for (int_fast32_t i=0;i<=nMax;++i)
+		s[i] = *(pCurrent+i)+*(k1+i)*b[4]+*(k2+i)*b[5]+*(k3+i)*b[6];
+	
+	for (int_fast32_t i=0;i<=nMax;++i)
+		k4[i] = *(derivative(s)+i)*H;
+	for (int_fast32_t i=0;i<=nMax;++i)
+		s[i] = *(pCurrent+i)+*(k1+i)*b[7]+*(k2+i)*b[8]+*(k3+i)*b[9]+*(k4+i)*b[10];
+
+	for (int_fast32_t i=0;i<=nMax;++i)
+		k5[i] = *(derivative(s)+i)*H;
+	for (int_fast32_t i=0;i<=nMax;++i)
+		s[i] = *(pCurrent+i)+*(k1+i)*b[11]+*(k2+i)*b[12]+*(k3+i)*b[13]+*(k4+i)*b[14]+*(k5+i)*b[15];
+
+	for (int_fast32_t i=0;i<=nMax;++i)
+		k6[i] = *(derivative(s)+i)*H;
+
+	for (int_fast32_t i=0;i<=nMax;++i)
+		*(pCurrent+stride+i) = *(pCurrent+i)+*(k1+i)*c[1]+*(k3+i)*c[3]+*(k4+i)*c[4]+*(k6+i)*c[6];
+	
+}
 
 void BGEvolution::evolve(uint_fast32_t steps)
 {
 	while(steps--)
 	{
+		rk5();
 		pCurrent += stride;
 	}
 }
@@ -35,14 +144,29 @@ void BGEvolution::create(double h_, const BGEVParameters &params)
 	c[5] = _mm256_set1_pd(0.0);
 	c[6] = _mm256_set1_pd(512.0/1771.0);
 
-	h = _mm256_set1_pd(h_);
+	H = _mm256_set1_pd(h_);
 
 	particleCount = params.particleCount;
 	nMax = params.nMax;
 	batchSize = params.batchSize;
 	stride = nMax+1;
 	gamma = params.gamma;
-
+	
+	std::vector<int_fast32_t> A;
+	for (int_fast32_t i=-nMax;i<=nMax;++i)
+	{
+		for (int_fast32_t j=-nMax;j<=nMax;++j)
+		for (int_fast32_t k=-nMax;k<=nMax;++k)
+		for (int_fast32_t l=-nMax;l<=nMax;++l)
+			if (k+l-j==i)
+			{
+				A.push_back(j);
+				A.push_back(k);
+				A.push_back(l);
+			}
+		indices.push_back(A);
+	}
+	
 	pData = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d)*batchSize);
 	pCurrent = pData;
 	pDerivative = (__m256d*)aligned_alloc(sizeof(__m256d),stride);
