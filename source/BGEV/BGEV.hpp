@@ -31,15 +31,16 @@ private:
 	// RK5 parameters
 	__m256d b[16];
 	__m256d c[7];
-	__m256d h;
+	__m256d H;
 
 	// {{re_0,im_0,re_0,im_0}, {re_1,im_1,re_-1,im_-1}, ...}
 	__m256d *pData;
 	__m256d *pCurrent;
 	__m256d *pDerivative;
 
+	__m256d* derivative(const __m256d *r);
+	void rk5();
 public:
-
 	void evolve(uint_fast32_t steps);
 
 	void create(double h_, const BGEVParameters &params);
