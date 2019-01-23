@@ -161,7 +161,7 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	params.output += std::to_string(alphas[0].E)+'\n';
 	params.output += std::to_string(alphas[0].Ed)+'\n';
 	params.output += std::to_string(alphas[0].P)+'\n';
-	params.output += std::to_string(alphas[0].Pd)+'\n';
+	params.output += std::to_string(alphas[0].Pd);
 
 	cfmc.release();
 	delete pInteraction;
