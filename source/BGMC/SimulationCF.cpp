@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
+#include <string>
 
 #include "BGMC.hpp"
 #include "ClassicalFieldsMC.hpp"
@@ -78,7 +79,7 @@ struct Info
 	}
 };
 
-int32_t bgSimulationCF(const BGMCParameters &params)
+int32_t bgSimulationCF(BGMCParameters &params)
 {
 	std::mt19937 random;
 	ClassicalFieldsMC cfmc;
@@ -146,6 +147,21 @@ int32_t bgSimulationCF(const BGMCParameters &params)
 	}
 
 	std::sort(alphas.begin(),alphas.end(),[](const AlphaRecord &a, const AlphaRecord &b){return a.distance<b.distance;});
+
+	params.output += std::to_string(params.nMax)+'\n';
+	params.output += std::to_string(params.gamma)+'\n';
+
+	for(int_fast32_t i=0; i<2*params.nMax+1;++i)
+		params.output += std::to_string(std::real(alphas[0].alpha[i]))+'\n';
+
+	for(int_fast32_t i=0; i<2*params.nMax+1;++i)
+		params.output += std::to_string(std::imag(alphas[0].alpha[i]))+'\n';
+
+	params.output += std::to_string(params.particleCount)+'\n';
+	params.output += std::to_string(alphas[0].E)+'\n';
+	params.output += std::to_string(alphas[0].Ed)+'\n';
+	params.output += std::to_string(alphas[0].P)+'\n';
+	params.output += std::to_string(alphas[0].Pd)+'\n';
 
 	cfmc.release();
 	delete pInteraction;

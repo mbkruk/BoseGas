@@ -47,6 +47,6 @@ public:
 	virtual ~BGMC();
 };
 
-int32_t bgSimulationCF(const BGMCParameters &params);
+int32_t bgSimulationCF(BGMCParameters &params);
 
 #endif
