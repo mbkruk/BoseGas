@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
 
 #include "BGMC.hpp"
 #include "ClassicalFieldsMC.hpp"
@@ -65,9 +66,9 @@ struct Info
 			<< std::endl;
 	}
 
-	void print(std::ostream &os, uint32_t batchIndex)
+	template<typename X> void print(std::ostream &os, X batch)
 	{
-		os << std::setw(8) << batchIndex
+		os << std::setw(8) << batch
 			<< " " << std::setw(15) << pAcceptMean
 			<< " " << std::setw(15) << n0Mean << std::setw(15) << n0StdDev
 			<< " " << std::setw(15) << asymmetryMean << std::setw(15) << asymmetryStdDev
@@ -82,7 +83,8 @@ int32_t bgSimulationCF(const BGMCParameters &params)
 	std::mt19937 random;
 	ClassicalFieldsMC cfmc;
 	ClassicalFieldsMC::Interaction *pInteraction = nullptr;
-	Info batchInfo;
+	Info batchInfo, totalInfo;
+	std::vector<AlphaRecord> alphas;
 
 	if (params.gamma!=0.0 && params.interactionType!="none")
 	{
@@ -118,13 +120,32 @@ int32_t bgSimulationCF(const BGMCParameters &params)
 	{
 		for (uint32_t i=0;i<params.batchSize;++i)
 		{
-			double p = cfmc.steps(random,1);
+			double a = cfmc.steps(random,1);
 			cfmc.energy(energy);
-			batchInfo.append(p,cfmc.groundStateOccupation(),0.0,energy.totalEnergy,cfmc.momentum());
+			double n0 = cfmc.groundStateOccupation();
+			double p = cfmc.momentum();
+			batchInfo.append(a,n0,0.0,energy.totalEnergy,p);
+			if((i+1)%params.skip==0)
+			{
+				totalInfo.append(a,n0,0.0,energy.totalEnergy,p);
+				alphas.push_back({energy.totalEnergy,p,0.0,0.0,0.0,cfmc.alphaCopy()});
+			}
 		}
 		batchInfo.process();
 		batchInfo.print(std::cerr,batch);
 	}
+
+	totalInfo.process();
+	totalInfo.print(std::cerr,"total");
+
+	for(auto &ar : alphas)
+	{
+		ar.Ed = (ar.E-totalInfo.energyMean)/totalInfo.energyStdDev;
+		ar.Pd = ar.P/totalInfo.momentumStdDev;
+		ar.distance = sqrt(sqr(ar.Ed)+sqr(ar.Pd));
+	}
+
+	std::sort(alphas.begin(),alphas.end(),[](const AlphaRecord &a, const AlphaRecord &b){return a.distance<b.distance;});
 
 	cfmc.release();
 	delete pInteraction;

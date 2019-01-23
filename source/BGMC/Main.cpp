@@ -27,6 +27,7 @@ int main(int argc, const char *argv[])
 	params.seed = generateSeed();
 	params.batchCount = 9;
 	params.batchSize = 1024*1024;
+	params.skip = 4;
 	params.interactionType = "none";
 
 	po.addOption("-h","--help","produce help message",1,[&](const char *[]){help=true;return 0;});
