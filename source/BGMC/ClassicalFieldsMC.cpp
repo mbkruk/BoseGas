@@ -26,17 +26,25 @@ uint32_t ClassicalFieldsMC::excitedStatesOccupation()
 	return std::min(static_cast<uint32_t>((N+1.0)/N*std::max(N-std::norm(alpha.alpha[nMax]),0.0)),static_cast<uint32_t>(N+0.5));
 }
 
+double ClassicalFieldsMC::groundStateOccupation()
+{
+	return std::norm(alpha.alpha[nMax]);
+}
+
 int32_t ClassicalFieldsMC::steps(std::mt19937 &random, uint32_t count)
 {
 	std::uniform_real_distribution<double> d1(0.0,1.0);
 	std::uniform_real_distribution<double> d2pi(0.0,2.0*M_PI);
 	double angle, length;
 	int32_t accepted = 0;
+	uint nTry;
 
 	while (count--)
 	{
+		nTry = 0;
 		do
 		{
+			++nTry;
 			for (uint32_t i=0;i<alpha0.alpha.size();++i)
 			{
 				angle = d2pi(random);
@@ -45,6 +53,8 @@ int32_t ClassicalFieldsMC::steps(std::mt19937 &random, uint32_t count)
 				alpha0.alpha[i].imag(alpha.alpha[i].imag()+length*sin(angle));
 			}
 			alpha0.normalize(N);
+			if (nTry>=1000)
+				std::cerr << "try " << nTry << std::endl;
 		}
 		while (fabs(alpha0.magnitude()/N-1.0)>0.01);
 

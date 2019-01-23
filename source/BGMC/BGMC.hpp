@@ -14,6 +14,9 @@ struct BGMCParameters
 	double beta;
 	double gamma;
 	uint32_t seed;
+	uint32_t batchCount, batchSize;
+	std::string interactionType;
+	std::vector<double> interactionCoefficients;
 	std::string output;
 };
 
@@ -42,5 +45,7 @@ public:
 
 	virtual ~BGMC();
 };
+
+int32_t bgSimulationCF(const BGMCParameters &params);
 
 #endif

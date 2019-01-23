@@ -86,6 +86,11 @@ private:
 
 public:
 
+	inline double getDelta() const
+	{
+		return delta;
+	}
+
 	inline const Alpha& currentAlpha()
 	{
 		return alpha;
@@ -112,6 +117,7 @@ public:
 	void energy(Energy &e) override;
 
 	uint32_t excitedStatesOccupation() override;
+	double groundStateOccupation();
 
 	int32_t steps(std::mt19937 &random, uint32_t count) override;
 
