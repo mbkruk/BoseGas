@@ -2,10 +2,14 @@
 #include <cinttypes>
 #include <string>
 #include <vector>
+#include <random>
+#include <cmath>
 
 #include "../BGCommon/ProgramOptions.hpp"
 #include "../BGCommon/ConfigFile.hpp"
+#include "../BGCommon/Random.hpp"
 #include "BGMC.hpp"
+#include "ClassicalFieldsMC.hpp"
 
 int main(int argc, const char *argv[])
 {
@@ -19,6 +23,8 @@ int main(int argc, const char *argv[])
 	params.particleCount = 1;
 	params.nMax = 0;
 	params.beta = 1.0;
+	params.gamma = 0.0;
+	params.seed = generateSeed();
 
 	po.addOption("-h","--help","produce help message",1,[&](const char *[]){help=true;return 0;});
 
@@ -42,6 +48,7 @@ int main(int argc, const char *argv[])
 		[&](const char *arg[])
 		{
 			params.nMax = std::stol(arg[1]);
+			params.beta = kCutoffConst/params.nMax/params.nMax;
 			return 0;
 		}
 	);
@@ -50,6 +57,7 @@ int main(int argc, const char *argv[])
 		[&](const char *arg[])
 		{
 			params.beta = std::stod(arg[1]);
+			params.nMax = static_cast<int32_t>(sqrt(kCutoffConst/params.beta));
 			return 0;
 		}
 	);
@@ -58,6 +66,7 @@ int main(int argc, const char *argv[])
 		[&](const char *arg[])
 		{
 			params.beta = 1.0/std::stod(arg[1]);
+			params.nMax = static_cast<int32_t>(sqrt(kCutoffConst/params.beta));
 			return 0;
 		}
 	);
@@ -98,8 +107,10 @@ int main(int argc, const char *argv[])
 	cf.addAttribute("nmax",
 		[](std::istream &is, const char *, void *pData)
 		{
-			if (!(is>>static_cast<BGMCParameters*>(pData)->nMax))
+			BGMCParameters *pp = static_cast<BGMCParameters*>(pData);
+			if (!(is>>pp->nMax))
 				return 1;
+			pp->beta = kCutoffConst/pp->nMax/pp->nMax;
 			return 0;
 		}
 	);
@@ -107,8 +118,10 @@ int main(int argc, const char *argv[])
 	cf.addAttribute("beta",
 		[](std::istream &is, const char *, void *pData)
 		{
-			if (!(is>>static_cast<BGMCParameters*>(pData)->beta))
+			BGMCParameters *pp = static_cast<BGMCParameters*>(pData);
+			if (!(is>>pp->beta))
 				return 1;
+			pp->nMax = static_cast<int32_t>(sqrt(kCutoffConst/pp->beta));
 			return 0;
 		}
 	);
@@ -130,6 +143,9 @@ int main(int argc, const char *argv[])
 	std::cerr << "particleCount = " << params.particleCount << std::endl;
 	std::cerr << "Nmax = " << params.nMax << std::endl;
 	std::cerr << "beta = " << params.beta << std::endl;
+	std::cerr << "seed = " << params.seed << std::endl;
+
+
 
 	return 0;
 }
