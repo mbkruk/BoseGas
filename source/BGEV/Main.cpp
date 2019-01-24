@@ -105,6 +105,8 @@ int main(int argc, const char *argv[])
 		}
 	);
 
+	evolution.create(0.01,params);
+	evolution.stdinICInit();
 	cf.addAttribute("",
 		[](std::istream &is, const char *attr, void *pData)
 		{
@@ -124,7 +126,7 @@ int main(int argc, const char *argv[])
 	std::cerr << "gamma = " << params.gamma << std::endl;
 
 	evolution.create(0.01,params);
-	evolution.evolve(params.batchSize);
+	evolution.evolve(10);
 	evolution.destroy();
 
 	return 0;

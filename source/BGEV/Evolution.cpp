@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <immintrin.h>
 #include <vector>
+#include <iostream>
 
 #include "BGEV.hpp"
 
@@ -117,6 +118,8 @@ void BGEvolution::evolve(uint_fast32_t steps)
 		rk5();
 		pCurrent += stride;
 	}
+	for (int_fast32_t i=0;i<stride;++i)
+		initial_conditions[i] = *(pCurrent+i);
 }
 
 void BGEvolution::create(double h_, const BGEVParameters &params)
@@ -171,10 +174,47 @@ void BGEvolution::create(double h_, const BGEVParameters &params)
 	pData = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d)*batchSize);
 	pCurrent = pData;
 	pDerivative = (__m256d*)aligned_alloc(sizeof(__m256d),stride);
+	initial_conditions = (__m256d*)aligned_alloc(sizeof(__m256d),stride);
 }
 
 void BGEvolution::destroy()
 {
 	free(pData);
 	free(pDerivative);
+}
+
+void BGEvolution::stdinICInit()
+{
+	double a, b;
+	for(int_fast32_t i=-nMax;i<=nMax;++i)
+	{
+		std::cin >> a;
+		if (i>0)
+			pData[i][0] = a;
+		else
+		if (i<0)
+			pData[abs(i)][2] = a;
+		else
+		if (i==0)
+		{
+			pData[0][0] = a;
+			pData[0][2] = a;
+		}
+	}
+
+	for (int_fast32_t i=-nMax;i<=nMax;++i)
+	{
+		std::cin >> b;
+		if (i>0)
+			pData[i][1] = b;
+		else
+		if (i<0)
+			pData[abs(i)][3] = b;
+		else
+		if(i==0)
+		{
+			pData[0][1] = b;
+			pData[0][3] = b;
+		}
+	}
 }

@@ -28,6 +28,9 @@ private:
 	// non-zero interaction sum factors
 	std::vector<std::vector<int_fast32_t> > indices;
 
+	//initial conditions
+	__m256d *initial_conditions; 
+
 	// RK5 parameters
 	__m256d b[16];
 	__m256d c[7];
@@ -45,6 +48,7 @@ public:
 
 	void create(double h_, const BGEVParameters &params);
 	void destroy();
+	void stdinICInit();
 };
 
 #endif
