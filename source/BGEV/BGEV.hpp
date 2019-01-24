@@ -24,6 +24,7 @@ private:
 	uint_fast32_t batchSize;
 	size_t stride;
 	double gamma;
+	double h;
 
 	// non-zero interaction sum factors
 	std::vector<std::vector<int_fast32_t> > indices;
@@ -50,6 +51,7 @@ public:
 	void destroy();
 	void stdinICInit();
 	double averageNZero(const int_fast32_t steps);
+	double fluctuationsNZero(const int_fast32_t steps, const double n0);
 };
 
 #endif
