@@ -16,7 +16,7 @@ int main(int argc, const char *argv[])
 	BGEvolution evolution;
 
 	params.particleCount = 1;
-	params.nMax = 0;
+	params.nMax = 4;
 	params.gamma = 1.0;
 	params.batchSize = 1024*1024;
 
@@ -105,8 +105,6 @@ int main(int argc, const char *argv[])
 		}
 	);
 
-	evolution.create(0.01,params);
-	evolution.stdinICInit();
 	cf.addAttribute("",
 		[](std::istream &is, const char *attr, void *pData)
 		{
@@ -120,12 +118,15 @@ int main(int argc, const char *argv[])
 		if (r=cf.parse(f.c_str(),&params))
 			return r;
 	}
-
+	evolution.create(0.0025,params);
+	evolution.stdinICInit();
 	std::cerr << "particleCount = " << params.particleCount << std::endl;
 	std::cerr << "Nmax = " << params.nMax << std::endl;
 	std::cerr << "gamma = " << params.gamma << std::endl;
 
-	evolution.evolve(10);
+	evolution.evolve(20000);
+	double avgn0 = evolution.averageNZero(20000);
+	std::cerr << "n0srednie = " << avgn0;
 	evolution.destroy();
 
 	return 0;

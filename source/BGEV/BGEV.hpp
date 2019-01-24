@@ -49,6 +49,7 @@ public:
 	void create(double h_, const BGEVParameters &params);
 	void destroy();
 	void stdinICInit();
+	double averageNZero(const int_fast32_t steps);
 };
 
 #endif
