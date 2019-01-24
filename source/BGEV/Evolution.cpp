@@ -165,6 +165,7 @@ void BGEvolution::create(double h_, const BGEVParameters &params)
 				A.push_back(l);
 			}
 		indices.push_back(A);
+		A.clear();
 	}
 	
 	pData = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d)*batchSize);
