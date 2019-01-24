@@ -152,6 +152,7 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	std::fstream output_file;
 	output_file.open(params.output,std::ios::out);
 
+	output_file << params.particleCount << '\n';
 	output_file << params.nMax << '\n';
 	output_file << params.gamma << '\n';
 
@@ -161,7 +162,6 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	for(int_fast32_t i=0; i<2*params.nMax+1;++i)
 		output_file << std::imag(alphas[0].alpha[i]) << '\n';
 
-	output_file << params.particleCount << '\n';
 	output_file << alphas[0].E << '\n';
 	output_file << alphas[0].Ed << '\n';
 	output_file << alphas[0].P << '\n';
