@@ -153,6 +153,7 @@ void BGEvolution::create(double h_, const BGEVParameters &params)
 	c[6] = _mm256_set1_pd(512.0/1771.0);
 
 	H = _mm256_set1_pd(h_);
+	h = h_;
 
 	particleCount = params.particleCount;
 	nMax = params.nMax;

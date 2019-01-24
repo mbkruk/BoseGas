@@ -126,7 +126,9 @@ int main(int argc, const char *argv[])
 
 	evolution.evolve(20000);
 	double avgn0 = evolution.averageNZero(20000);
+	double flucn0 = evolution.fluctuationsNZero(20000,avgn0);
 	std::cerr << "n0srednie = " << avgn0;
+	std::cerr << "n0fluk = " << flucn0;
 	evolution.destroy();
 
 	return 0;
