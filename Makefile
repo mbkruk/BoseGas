@@ -3,9 +3,9 @@ ALL=$(LIB) bin/bgmc bin/bgev
 DEBUG=
 
 GPP_VERSION=$(shell g++ -dumpversion)
-STD=$(shell if [ "$(GPP_VERSION)" \> "4" ]; then echo "-std=c++11"; else echo "-std=c++0x"; fi)
+STD=$(shell if [ "$(GPP_VERSION)" \> "5" ]; then echo "-std=c++11"; else echo "-std=c++0x"; fi)
 CFLAGS=-mavx -O3
-LDFLAGS=$(shell [ "$(GPP_VERSION)" \> "4" ] && echo "-flto")
+LDFLAGS=$(shell [ "$(GPP_VERSION)" \> "5" ] && echo "-flto")
 
 .PHONY: all
 all: $(ALL)
