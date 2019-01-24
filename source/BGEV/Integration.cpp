@@ -26,7 +26,7 @@ double BGEvolution::averageNZero(const int_fast32_t steps)
 	integral += avx_sum[0]+avx_sum[1]+avx_sum[2]+avx_sum[3]+(*(pData+int_steps*stride))[0]*(*(pData+int_steps*stride))[0]+(*(pData+int_steps*stride))[1]*(*(pData+int_steps*stride))[1];
 	aveN0 = integral/(int_steps*3.0);
 
-	for(int i=0;i<2*nMax+1;++i)
+	for(int i=0;i<nMax+1;++i)
 	{
 		std::cerr << (*(pData+i))[0] << '\n';
 	}
