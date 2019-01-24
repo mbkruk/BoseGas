@@ -125,7 +125,6 @@ int main(int argc, const char *argv[])
 	std::cerr << "Nmax = " << params.nMax << std::endl;
 	std::cerr << "gamma = " << params.gamma << std::endl;
 
-	evolution.create(0.01,params);
 	evolution.evolve(10);
 	evolution.destroy();
 

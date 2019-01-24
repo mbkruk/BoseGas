@@ -2,6 +2,7 @@
 #include <immintrin.h>
 #include <vector>
 #include <iostream>
+#include <cmath>
 
 #include "BGEV.hpp"
 
