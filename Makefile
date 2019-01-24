@@ -2,12 +2,14 @@ LIB=lib/libbgcommon.a
 ALL=$(LIB) bin/bgmc bin/bgev
 DEBUG=
 
+STD=-std=c++0x
+
 .PHONY: all
 all: $(ALL)
 
 build/%.cpp.o: %.cpp
 	@mkdir -p $(@D)
-	g++ -c $(DEBUG) -mavx -Ofast -std=c++11 $< -o $@
+	g++ -c $(DEBUG) -mavx -Ofast $(STD) $< -o $@
 
 LIB_SOURCES=$(shell find -wholename "./source/BGCommon/*.cpp")
 LIB_OBJECTS=$(LIB_SOURCES:%=build/%.o)
