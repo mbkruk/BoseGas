@@ -37,7 +37,7 @@ int32_t ClassicalFieldsMC::steps(std::mt19937 &random, uint32_t count)
 	std::uniform_real_distribution<double> d2pi(0.0,2.0*M_PI);
 	double angle, length;
 	int32_t accepted = 0;
-	uint nTry;
+	uint32_t nTry;
 
 	while (count--)
 	{

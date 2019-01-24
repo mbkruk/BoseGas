@@ -6,7 +6,11 @@
 
 #include "BGEV.hpp"
 
-__m256d* BGEvolution::derivative(const __m256d *r) 
+#ifdef _WIN32
+#define aligned_alloc(alignment,size) _aligned_malloc((size),(alignment))
+#endif
+
+__m256d* BGEvolution::derivative(const __m256d *r)
 {
 	const int_fast32_t baab_length = 2*nMax+1;
 	__m256d baabtab[baab_length];
@@ -46,7 +50,7 @@ __m256d* BGEvolution::derivative(const __m256d *r)
 	b = -2.0*gamma*(B[0]+B[1]+B[2]+B[3]);
 	*(pDerivative) = _mm256_set_pd(b,a,b,a);
 
-	for (int_fast32_t i=1;i<=nMax;++i) //calculate  a_i b_i a_-i, b_i 
+	for (int_fast32_t i=1;i<=nMax;++i) //calculate  a_i b_i a_-i, b_i
 	{
 		A = _mm256_setzero_pd();
 		B = _mm256_setzero_pd();
@@ -78,12 +82,12 @@ void BGEvolution::rk5()
 {
 	__m256d k1[stride], k2[stride], k3[stride], k4[stride], k5[stride], k6[stride];
 	__m256d s[stride];
-	
+
 	for (int_fast32_t i=0;i<=nMax;++i)
 		k1[i] = *(derivative(pCurrent)+i)*H;
 	for (int_fast32_t i=0;i<=nMax;++i)
 		s[i] = *(pCurrent+i)+*(k1+i)*b[1];
- 
+
 	for (int_fast32_t i=0;i<=nMax;++i)
 		k2[i] = *(derivative(s)+i)*H;
 	for (int_fast32_t i=0;i<=nMax;++i)
@@ -93,7 +97,7 @@ void BGEvolution::rk5()
 		k3[i] = *(derivative(s)+i)*H;
 	for (int_fast32_t i=0;i<=nMax;++i)
 		s[i] = *(pCurrent+i)+*(k1+i)*b[4]+*(k2+i)*b[5]+*(k3+i)*b[6];
-	
+
 	for (int_fast32_t i=0;i<=nMax;++i)
 		k4[i] = *(derivative(s)+i)*H;
 	for (int_fast32_t i=0;i<=nMax;++i)
@@ -109,7 +113,7 @@ void BGEvolution::rk5()
 
 	for (int_fast32_t i=0;i<=nMax;++i)
 		*(pCurrent+stride+i) = *(pCurrent+i)+*(k1+i)*c[1]+*(k3+i)*c[3]+*(k4+i)*c[4]+*(k6+i)*c[6];
-	
+
 }
 
 void BGEvolution::evolve(uint_fast32_t steps)
@@ -155,7 +159,7 @@ void BGEvolution::create(double h_, const BGEVParameters &params)
 	batchSize = params.batchSize;
 	stride = nMax+1;
 	gamma = params.gamma;
-	
+
 	std::vector<int_fast32_t> A;
 	for (int_fast32_t i=-nMax;i<=nMax;++i)
 	{
@@ -171,7 +175,7 @@ void BGEvolution::create(double h_, const BGEVParameters &params)
 		indices.push_back(A);
 		A.clear();
 	}
-	
+
 	pData = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d)*batchSize);
 	pCurrent = pData;
 	pDerivative = (__m256d*)aligned_alloc(sizeof(__m256d),stride);
