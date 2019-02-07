@@ -5,15 +5,15 @@
 
 #include "BGEV.hpp"
 
-double BGEvolution::averageNZero(const int_fast32_t steps)
+double BGEvolution::averageNZero()
 {	
 	double aveN0;
 	int_fast32_t int_steps;
 
-	if (steps%2==0) //we want even number of steps
-		int_steps = steps;
+	if (batchSize%2==0) //we want even number of steps
+		int_steps = batchSize;
 	else
-		int_steps = steps-1;
+		int_steps = batchSize-1;
 
 	int_fast32_t avx_steps = int_steps/2-1;
 
@@ -22,26 +22,23 @@ double BGEvolution::averageNZero(const int_fast32_t steps)
 	__m256d avx_two = _mm256_set1_pd(2.0);
 	for (int_fast32_t i=1;i<=avx_steps;++i)
 		avx_sum += (*(pData+2*i*stride))*(*(pData+2*i*stride))+avx_two*(*(pData+(2*i-1)*stride))*(*(pData+(2*i-1)*stride));
+	
 	avx_sum += avx_two*(*(pData+(int_steps-1)*stride))*(*(pData+(int_steps-1)*stride));
 	integral += avx_sum[0]+avx_sum[1]+avx_sum[2]+avx_sum[3]+(*(pData+int_steps*stride))[0]*(*(pData+int_steps*stride))[0]+(*(pData+int_steps*stride))[1]*(*(pData+int_steps*stride))[1];
 	aveN0 = integral/(int_steps*3.0);
 
-	for(int i=0;i<nMax+1;++i)
-	{
-		std::cerr << (*(pData+i))[0] << '\n';
-	}
 	return aveN0;
 }
 
-double BGEvolution::fluctuationsNZero(const int_fast32_t steps, const double n0)
+double BGEvolution::fluctuationsNZero(const double n0)
 {
 	double aveN0sq;
 	int_fast32_t int_steps;
 
-	if (steps%2==0) //we want even number of steps
-		int_steps = steps;
+	if (batchSize%2==0) //we want even number of steps
+		int_steps = batchSize;
 	else
-		int_steps = steps-1;
+		int_steps = batchSize-1;
 
 	int_fast32_t avx_steps = int_steps/2-1;
 

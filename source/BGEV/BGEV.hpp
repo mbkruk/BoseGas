@@ -10,8 +10,8 @@ struct BGEVParameters
 {
 	uint_fast32_t particleCount;
 	int_fast32_t nMax;
-	double gamma;
-	uint_fast32_t batchSize;
+	double gamma, h;
+	uint_fast32_t batchSize, batchCount;
 	std::string output;
 };
 
@@ -22,15 +22,20 @@ private:
 	uint_fast32_t particleCount;
 	int_fast32_t nMax;
 	uint_fast32_t batchSize;
+	uint_fast32_t batchCount;
 	size_t stride;
 	double gamma;
 	double h;
+	std::string output;
+	std::string interactionType;
+	std::vector<double> interactionCoefficients;
 
 	// non-zero interaction sum factors
 	std::vector<std::vector<int_fast32_t> > indices;
 
 	//initial conditions
 	__m256d *initial_conditions; 
+	__m256d *baabtab;
 
 	// RK5 parameters
 	__m256d b[16];
@@ -42,16 +47,29 @@ private:
 	__m256d *pCurrent;
 	__m256d *pDerivative;
 
-	__m256d* derivative(const __m256d *r);
-	void rk5();
+	__m256d *k1, *k2, *k3, *k4, *k5, *k6;
+	__m256d *yk1, *yk2, *yk3, *yk4, *yk5;
+
+	void derivative(const __m256d *r);
+
 public:
 	void evolve(uint_fast32_t steps);
 
-	void create(double h_, const BGEVParameters &params);
+	void create(const BGEVParameters &params);
 	void destroy();
+	void icInit();
+	
 	void stdinICInit();
-	double averageNZero(const int_fast32_t steps);
-	double fluctuationsNZero(const int_fast32_t steps, const double n0);
+	void printParameters();
+
+	double averageNZero();
+	double fluctuationsNZero(const double n0);
+
+	double nAll();
+	double nZero();
+	double momentum();
+	double kineticEnergy();
+	double potentialEnergy();
 };
 
 #endif

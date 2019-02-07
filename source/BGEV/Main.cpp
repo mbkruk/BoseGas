@@ -1,9 +1,13 @@
 #include <iostream>
 #include <cinttypes>
+#include <iomanip>
+#include <vector>
 
 #include "../BGCommon/ProgramOptions.hpp"
 #include "../BGCommon/ConfigFile.hpp"
 #include "BGEV.hpp"
+
+const int_fast32_t dist = 2*sizeof(double)+9;
 
 int main(int argc, const char *argv[])
 {
@@ -16,9 +20,12 @@ int main(int argc, const char *argv[])
 	BGEvolution evolution;
 
 	params.particleCount = 1;
-	params.nMax = 4;
-	params.gamma = 1.0;
-	params.batchSize = 1024*1024;
+	params.nMax = 1;
+	params.gamma = 1;
+	params.batchSize = 10000;
+	params.batchCount = 1;
+
+	std::vector<double> avgs, flucs;
 
 	po.addOption("-h","--help","produce help message",1,[&](const char *[]){help=true;return 0;});
 
@@ -30,26 +37,26 @@ int main(int argc, const char *argv[])
 		}
 	);
 
-	po.addOption("-N","--particle-count <count>","set particle count",2,
+	po.addOption("-H","--step-size <number>","set H(step size)",2,
 		[&](const char *arg[])
 		{
-			params.particleCount = std::stoul(arg[1]);
+			params.h = std::stod(arg[1]);
 			return 0;
 		}
 	);
 
-	po.addOption("-n","--nmax <count>","set Nmax",2,
+	po.addOption("-BS","--Batch-size <count>","set batch size",2,
 		[&](const char *arg[])
 		{
-			params.nMax = std::stol(arg[1]);
+			params.batchCount = std::stoul(arg[1]);
 			return 0;
 		}
 	);
 
-	po.addOption("-g","--gamma <number>","set gamma(interaction strength)",2,
+	po.addOption("-BC","--Batch-count <count>","set batch count",2,
 		[&](const char *arg[])
 		{
-			params.gamma = std::stod(arg[1]);
+			params.batchCount = std::stoul(arg[1]);
 			return 0;
 		}
 	);
@@ -78,28 +85,28 @@ int main(int argc, const char *argv[])
 		return 0;
 	}
 
-	cf.addAttribute("N",
+	cf.addAttribute("H",
 		[](std::istream &is, const char *, void *pData)
 		{
-			if (!(is>>static_cast<BGEVParameters*>(pData)->particleCount))
+			if (!(is>>static_cast<BGEVParameters*>(pData)->h))
 				return 1;
 			return 0;
 		}
 	);
 
-	cf.addAttribute("nmax",
+	cf.addAttribute("BS",
 		[](std::istream &is, const char *, void *pData)
 		{
-			if (!(is>>static_cast<BGEVParameters*>(pData)->nMax))
+			if (!(is>>static_cast<BGEVParameters*>(pData)->batchSize))
 				return 1;
 			return 0;
 		}
 	);
 
-	cf.addAttribute("gamma",
+	cf.addAttribute("BC",
 		[](std::istream &is, const char *, void *pData)
 		{
-			if (!(is>>static_cast<BGEVParameters*>(pData)->gamma))
+			if (!(is>>static_cast<BGEVParameters*>(pData)->batchCount))
 				return 1;
 			return 0;
 		}
@@ -118,17 +125,24 @@ int main(int argc, const char *argv[])
 		if (r=cf.parse(f.c_str(),&params))
 			return r;
 	}
-	evolution.create(0.0025,params);
-	evolution.stdinICInit();
-	std::cerr << "particleCount = " << params.particleCount << std::endl;
-	std::cerr << "Nmax = " << params.nMax << std::endl;
-	std::cerr << "gamma = " << params.gamma << std::endl;
 
-	evolution.evolve(20000);
-	double avgn0 = evolution.averageNZero(20000);
-	double flucn0 = evolution.fluctuationsNZero(20000,avgn0);
-	std::cerr << "n0srednie = " << avgn0;
-	std::cerr << "n0fluk = " << flucn0;
+	std::cin >> params.particleCount;
+	std::cin >> params.nMax;
+	std::cin >> params.gamma;
+
+	evolution.create(params);
+	evolution.stdinICInit();
+	evolution.printParameters();
+	for(int i=0;i<params.batchCount;++i)
+	{
+		evolution.icInit();	
+		evolution.evolve(params.batchSize);
+		avgs.push_back(evolution.averageNZero());
+		flucs.push_back(evolution.fluctuationsNZero(avgs[i]));
+		std::cerr  << "Batch " << i+1 << std::setw(dist) << std::setprecision(16) << avgs[i] << std::setw(dist) << 
+		flucs[i] << std::setw(dist) << evolution.kineticEnergy()+evolution.potentialEnergy() <<  std::setw(dist) <<
+		evolution.nAll() << std::setw(dist) << evolution.momentum() << '\n';
+	}
 	evolution.destroy();
 
 	return 0;
