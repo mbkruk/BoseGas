@@ -115,7 +115,7 @@ int main(int argc, const char *argv[])
 	cf.addAttribute("",
 		[](std::istream &is, const char *attr, void *pData)
 		{
-			std::cerr << "unknown attriute `" << attr << "`" << std::endl;
+			std::cerr << "unknown attribute `" << attr << "`" << std::endl;
 			return 2;
 		}
 	);
@@ -139,9 +139,10 @@ int main(int argc, const char *argv[])
 		evolution.evolve(params.batchSize);
 		avgs.push_back(evolution.averageNZero());
 		flucs.push_back(evolution.fluctuationsNZero(avgs[i]));
-		std::cerr  << "Batch " << i+1 << std::setw(dist) << std::setprecision(16) << avgs[i] << std::setw(dist) << 
+		std::cerr  << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(16) << avgs[i] << std::setw(dist) << 
 		flucs[i] << std::setw(dist) << evolution.kineticEnergy()+evolution.potentialEnergy() <<  std::setw(dist) <<
 		evolution.nAll() << std::setw(dist) << evolution.momentum() << '\n';
+		evolution.saveToFile(avgs[i],flucs[i],i);
 	}
 	evolution.destroy();
 

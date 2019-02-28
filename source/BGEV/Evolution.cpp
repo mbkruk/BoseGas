@@ -2,10 +2,13 @@
 #include <immintrin.h>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 #include <cmath>
+#include <fstream>
 
 #include "BGEV.hpp"
 
+const int_fast32_t dist = 2*sizeof(double)+9;
 #ifdef _WIN32
 #define aligned_alloc(alignment,size) _aligned_malloc((size),(alignment))
 #endif
@@ -156,6 +159,7 @@ void BGEvolution::create(const BGEVParameters &params)
 	batchCount = params.batchCount;
 	stride = nMax+1;
 	gamma = params.gamma;
+	output = params.output;
 
 	std::vector<int_fast32_t> A;
 	for (int_fast32_t i=-nMax;i<=nMax;++i)
@@ -234,6 +238,20 @@ void BGEvolution::stdinICInit()
 			(*(initial_conditions))[3] = b;
 		}
 	}
+
+	std::fstream output_file;
+	output_file.open(output,std::ios::out);
+
+	output_file << "Number of particles: " << particleCount << '\n';
+	output_file << "Nmax: " << nMax << '\n';
+	output_file << "Gamma: " << gamma << '\n';
+	output_file << "Step size: " << h << '\n';
+	output_file << "Batch size: " << batchSize << '\n';
+	output_file << "Batch count: " << batchCount << '\n';
+	output_file << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0" << std::setw(dist) << 
+	"Fluctuations n0" << std::setw(dist) << "Energy" <<  std::setw(dist) <<
+	"Particle count" << std::setw(dist) << "Momentum" << '\n';
+
 }
 
 void BGEvolution::icInit()
@@ -251,5 +269,20 @@ void BGEvolution::printParameters()
 	std::cout << "Gamma: " << gamma << '\n';
 	std::cout << "Step size: " << h << '\n';
 	std::cout << "Batch size: " << batchSize << '\n';
-	std::cout << "Batch count: " << batchCount << '\n';
+	std::cout << "Batch count: " << batchCount << '\n' << '\n';
+	std::cout << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0" << std::setw(dist) << 
+	"Fluctuations n0" << std::setw(dist) << "Energy" <<  std::setw(dist) <<
+	"Particle count" << std::setw(dist) << "Momentum" << '\n';
+
+}
+
+void BGEvolution::saveToFile(const double avg, const double fluc, const int i)
+{
+	std::fstream output_file;
+	output_file.open(output,std::ios::app);
+
+	output_file << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(10) << avg << std::setw(dist) << 
+	fluc << std::setw(dist) << kineticEnergy()+potentialEnergy() <<  std::setw(dist) <<
+	nAll() << std::setw(dist) << momentum() << '\n';
+	output_file.close();
 }

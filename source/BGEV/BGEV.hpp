@@ -58,6 +58,7 @@ public:
 	void create(const BGEVParameters &params);
 	void destroy();
 	void icInit();
+	void saveToFile(const double avg, const double fluc, const int i);
 	
 	void stdinICInit();
 	void printParameters();
