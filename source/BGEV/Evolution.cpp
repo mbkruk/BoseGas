@@ -272,7 +272,10 @@ void BGEvolution::create(const BGEVParameters &params)
 	output = params.output;
 	interactionLength = params.interactionLength;
 	interactionType = params.interactionType;
-	reducedCoefficients = params.reducedCoefficients;
+
+	for(int i=0;i<params.reducedCoefficients.size();++i)
+	reducedCoefficients.push_back(params.reducedCoefficients[i]);
+
 
 		std::vector<int_fast32_t> A;
 	if (interactionType=="contact")

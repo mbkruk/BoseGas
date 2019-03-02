@@ -70,7 +70,7 @@ double BGEvolution::potentialEnergy()
 		for (int_fast32_t k=-nMax;k<=nMax;++k)
 		for (int_fast32_t l=-nMax;l<=nMax;++l)	
 			if(i+j==k+l)
-				u += reducedCoefficients[std::max(abs(k-i),abs(l-j))]*((*(pCurrent+abs(i)))[1-sgn(i)]*(*(pCurrent+abs(j)))[1-sgn(j)]*(*(pCurrent+abs(k)))[1-sgn(k)]*(*(pCurrent+abs(l)))[1-sgn(l)]-
+				u += reducedCoefficients[abs(k-i)]*((*(pCurrent+abs(i)))[1-sgn(i)]*(*(pCurrent+abs(j)))[1-sgn(j)]*(*(pCurrent+abs(k)))[1-sgn(k)]*(*(pCurrent+abs(l)))[1-sgn(l)]-
 				(*(pCurrent+abs(i)))[1-sgn(i)]*(*(pCurrent+abs(j)))[1-sgn(j)]*(*(pCurrent+abs(k)))[2-sgn(k)]*(*(pCurrent+abs(l)))[2-sgn(l)]+
 				(*(pCurrent+abs(i)))[1-sgn(i)]*(*(pCurrent+abs(j)))[2-sgn(j)]*(*(pCurrent+abs(k)))[1-sgn(k)]*(*(pCurrent+abs(l)))[2-sgn(l)]+
 				(*(pCurrent+abs(i)))[1-sgn(i)]*(*(pCurrent+abs(j)))[2-sgn(j)]*(*(pCurrent+abs(k)))[2-sgn(k)]*(*(pCurrent+abs(l)))[1-sgn(l)]+
