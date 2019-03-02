@@ -129,6 +129,19 @@ int main(int argc, const char *argv[])
 	std::cin >> params.particleCount;
 	std::cin >> params.nMax;
 	std::cin >> params.gamma;
+	std::cin >> params.interactionType;
+
+
+	if (params.interactionType=="gauss" || params.interactionType=="ddi")
+	{
+		std::cin >> params.interactionLength;
+		double x;
+		for (int i=0;i<=2*params.nMax;++i)
+		{
+			std::cin >> x;
+			params.reducedCoefficients.push_back(x);
+		}
+	}
 
 	evolution.create(params);
 	evolution.stdinICInit();

@@ -77,48 +77,158 @@ void BGEvolution::derivative(const __m256d *r)
 	}
 }
 
+void BGEvolution::derivativeLong(const __m256d *r)
+{
+	//filling baab array
+	double a = (*(r))[0];
+	double b = (*(r))[1];
+	baabtab[nMax] =  _mm256_set_pd(b,a,a,b);
+
+	double c, d;
+	for (int_fast32_t i=1;i<=nMax;++i)
+	{
+		a = (*(r+i))[0];
+		b = (*(r+i))[1];
+		c = (*(r+i))[2];
+		d = (*(r+i))[3];
+		baabtab[i+nMax] =  _mm256_set_pd(b,a,a,b);
+		baabtab[nMax-i] =  _mm256_set_pd(d,c,c,d);
+	}
+
+	//A,B,C,D are used to calculate data for a_k, b_k, a_-k, b_-k
+	__m256d A = _mm256_setzero_pd();
+	__m256d B = _mm256_setzero_pd();
+	__m256d C = _mm256_setzero_pd();
+	__m256d D = _mm256_setzero_pd();
+	__m256d sgn = _mm256_set_pd(-1.0,1.0,1.0,1.0);
+	for (int_fast32_t j=0;j<indices[nMax].size();j+=3) //calculate sum for a_0 and b_0
+		{
+			A = A+interactionCoefficients[indicesCount[nMax]+j/3]*baabtab[indices[nMax][j]]*_mm256_permute_pd(baabtab[indices[nMax][j+1]],0b0110)*
+			_mm256_permute_pd(baabtab[indices[nMax][j+2]],0b0000)*sgn;
+			B = B+interactionCoefficients[indicesCount[nMax]+j/3]*_mm256_permute_pd(baabtab[indices[nMax][j]],0b0101)*_mm256_permute_pd(baabtab[indices[nMax][j+1]],0b1001)*
+			_mm256_permute_pd(baabtab[indices[nMax][j+2]],0b1111)*sgn;
+		}
+	a = 2.0*gamma*(A[0]+A[1]+A[2]+A[3]);
+	b = -2.0*gamma*(B[0]+B[1]+B[2]+B[3]);
+	*(pDerivative) = _mm256_set_pd(b,a,b,a);
+
+	for (int_fast32_t i=1;i<=nMax;++i) //calculate  a_i b_i a_-i, b_i
+	{
+		A = _mm256_setzero_pd();
+		B = _mm256_setzero_pd();
+		C = _mm256_setzero_pd();
+		D = _mm256_setzero_pd();
+		for (int_fast32_t j=0;j<indices[nMax+i].size();j+=3) //calculate sum for a_i and b_i
+		{
+			A = A+interactionCoefficients[indicesCount[nMax+i]+j/3]*baabtab[indices[nMax+i][j]]*_mm256_permute_pd(baabtab[indices[nMax+i][j+1]],0b0110)*
+			_mm256_permute_pd(baabtab[indices[nMax+i][j+2]],0b0000)*sgn;
+			B = B+interactionCoefficients[indicesCount[nMax+i]+j/3]*_mm256_permute_pd(baabtab[indices[nMax+i][j]],0b0101)*_mm256_permute_pd(baabtab[indices[nMax+i][j+1]],0b1001)*
+			_mm256_permute_pd(baabtab[indices[nMax+i][j+2]],0b1111)*sgn;
+		}
+
+		for (int_fast32_t j=0;j<indices[nMax-i].size();j+=3) //calculate sum for a_-i and b_-i
+		{
+			C = C+interactionCoefficients[indicesCount[nMax-i]+j/3]*baabtab[indices[nMax-i][j]]*_mm256_permute_pd(baabtab[indices[nMax-i][j+1]],0b0110)*
+			_mm256_permute_pd(baabtab[indices[nMax-i][j+2]],0b0000)*sgn;
+			D = D+interactionCoefficients[indicesCount[nMax-i]+j/3]*_mm256_permute_pd(baabtab[indices[nMax-i][j]],0b0101)*_mm256_permute_pd(baabtab[indices[nMax-i][j+1]],0b1001)*
+			_mm256_permute_pd(baabtab[indices[nMax-i][j+2]],0b1111)*sgn;
+		}
+
+		*(pDerivative+i) = _mm256_set_pd((*(r+i))[2]*i*i*(-1.0)-2.0*gamma*(D[0]+D[1]+D[2]+D[3]),(*(r+i))[3]*i*i+2.0*gamma*(C[0]+C[1]+C[2]+C[3]),
+		(*(r+i))[0]*i*i*(-1.0)-2.0*gamma*(B[0]+B[1]+B[2]+B[3]),(*(r+i))[1]*i*i+2.0*gamma*(A[0]+A[1]+A[2]+A[3]));
+	}
+}
+
 void BGEvolution::evolve(uint_fast32_t steps)
 {
-	while (steps--)
+	if (interactionType=="gauss" || interactionType=="ddi")
 	{
-		derivative(pCurrent);
-		for (int_fast32_t i=0;i<=nMax;++i)
-			k1[i] = *(pDerivative+i)*H;
-		for (int_fast32_t i=0;i<=nMax;++i)
-			yk1[i] = *(pCurrent+i)+*(k1+i)*b[1];
 
-		derivative(yk1);
-		for (int_fast32_t i=0;i<=nMax;++i)
-			k2[i] = *(pDerivative+i)*H;
-		for (int_fast32_t i=0;i<=nMax;++i)
-			yk2[i] = *(pCurrent+i)+*(k1+i)*b[2]+*(k2+i)*b[3];
+		while (steps--)
+		{
+			derivativeLong(pCurrent);
+			for (int_fast32_t i=0;i<=nMax;++i)
+				k1[i] = *(pDerivative+i)*H;
+			for (int_fast32_t i=0;i<=nMax;++i)
+				yk1[i] = *(pCurrent+i)+*(k1+i)*b[1];
 
-		derivative(yk2);
-		for (int_fast32_t i=0;i<=nMax;++i)
-			k3[i] = *(pDerivative+i)*H;
-		for (int_fast32_t i=0;i<=nMax;++i)
-			yk3[i] = *(pCurrent+i)+*(k1+i)*b[4]+*(k2+i)*b[5]+*(k3+i)*b[6];
-		
-		derivative(yk3);
-		for (int_fast32_t i=0;i<=nMax;++i)
-			k4[i] = *(pDerivative+i)*H;
-		for (int_fast32_t i=0;i<=nMax;++i)
-			yk4[i] = *(pCurrent+i)+*(k1+i)*b[7]+*(k2+i)*b[8]+*(k3+i)*b[9]+*(k4+i)*b[10];
+			derivativeLong(yk1);
+			for (int_fast32_t i=0;i<=nMax;++i)
+				k2[i] = *(pDerivative+i)*H;
+			for (int_fast32_t i=0;i<=nMax;++i)
+				yk2[i] = *(pCurrent+i)+*(k1+i)*b[2]+*(k2+i)*b[3];
 
-		derivative(yk4);
-		for (int_fast32_t i=0;i<=nMax;++i)
-			k5[i] = *(pDerivative+i)*H;
-		for (int_fast32_t i=0;i<=nMax;++i)
-			yk5[i] = *(pCurrent+i)+*(k1+i)*b[11]+*(k2+i)*b[12]+*(k3+i)*b[13]+*(k4+i)*b[14]+*(k5+i)*b[15];
+			derivativeLong(yk2);
+			for (int_fast32_t i=0;i<=nMax;++i)
+				k3[i] = *(pDerivative+i)*H;
+			for (int_fast32_t i=0;i<=nMax;++i)
+				yk3[i] = *(pCurrent+i)+*(k1+i)*b[4]+*(k2+i)*b[5]+*(k3+i)*b[6];
+			
+			derivativeLong(yk3);
+			for (int_fast32_t i=0;i<=nMax;++i)
+				k4[i] = *(pDerivative+i)*H;
+			for (int_fast32_t i=0;i<=nMax;++i)
+				yk4[i] = *(pCurrent+i)+*(k1+i)*b[7]+*(k2+i)*b[8]+*(k3+i)*b[9]+*(k4+i)*b[10];
 
-		derivative(yk5);
-		for (int_fast32_t i=0;i<=nMax;++i)
-			k6[i] = *(pDerivative+i)*H;
+			derivativeLong(yk4);
+			for (int_fast32_t i=0;i<=nMax;++i)
+				k5[i] = *(pDerivative+i)*H;
+			for (int_fast32_t i=0;i<=nMax;++i)
+				yk5[i] = *(pCurrent+i)+*(k1+i)*b[11]+*(k2+i)*b[12]+*(k3+i)*b[13]+*(k4+i)*b[14]+*(k5+i)*b[15];
 
-		for (int_fast32_t i=0;i<=nMax;++i)
-			*(pCurrent+stride+i) = *(pCurrent+i)+*(k1+i)*c[1]+*(k3+i)*c[3]+*(k4+i)*c[4]+*(k6+i)*c[6];
+			derivativeLong(yk5);
+			for (int_fast32_t i=0;i<=nMax;++i)
+				k6[i] = *(pDerivative+i)*H;
 
-			pCurrent += stride;
+			for (int_fast32_t i=0;i<=nMax;++i)
+				*(pCurrent+stride+i) = *(pCurrent+i)+*(k1+i)*c[1]+*(k3+i)*c[3]+*(k4+i)*c[4]+*(k6+i)*c[6];
+
+				pCurrent += stride;
+		}
+	}
+	else
+	{
+		while (steps--)
+		{
+			derivative(pCurrent);
+			for (int_fast32_t i=0;i<=nMax;++i)
+				k1[i] = *(pDerivative+i)*H;
+			for (int_fast32_t i=0;i<=nMax;++i)
+				yk1[i] = *(pCurrent+i)+*(k1+i)*b[1];
+
+			derivative(yk1);
+			for (int_fast32_t i=0;i<=nMax;++i)
+				k2[i] = *(pDerivative+i)*H;
+			for (int_fast32_t i=0;i<=nMax;++i)
+				yk2[i] = *(pCurrent+i)+*(k1+i)*b[2]+*(k2+i)*b[3];
+
+			derivative(yk2);
+			for (int_fast32_t i=0;i<=nMax;++i)
+				k3[i] = *(pDerivative+i)*H;
+			for (int_fast32_t i=0;i<=nMax;++i)
+				yk3[i] = *(pCurrent+i)+*(k1+i)*b[4]+*(k2+i)*b[5]+*(k3+i)*b[6];
+			
+			derivative(yk3);
+			for (int_fast32_t i=0;i<=nMax;++i)
+				k4[i] = *(pDerivative+i)*H;
+			for (int_fast32_t i=0;i<=nMax;++i)
+				yk4[i] = *(pCurrent+i)+*(k1+i)*b[7]+*(k2+i)*b[8]+*(k3+i)*b[9]+*(k4+i)*b[10];
+
+			derivative(yk4);
+			for (int_fast32_t i=0;i<=nMax;++i)
+				k5[i] = *(pDerivative+i)*H;
+			for (int_fast32_t i=0;i<=nMax;++i)
+				yk5[i] = *(pCurrent+i)+*(k1+i)*b[11]+*(k2+i)*b[12]+*(k3+i)*b[13]+*(k4+i)*b[14]+*(k5+i)*b[15];
+
+			derivative(yk5);
+			for (int_fast32_t i=0;i<=nMax;++i)
+				k6[i] = *(pDerivative+i)*H;
+
+			for (int_fast32_t i=0;i<=nMax;++i)
+				*(pCurrent+stride+i) = *(pCurrent+i)+*(k1+i)*c[1]+*(k3+i)*c[3]+*(k4+i)*c[4]+*(k6+i)*c[6];
+
+				pCurrent += stride;
+		}
 	}
 
 	for (int_fast32_t i=0;i<stride;++i)
@@ -160,28 +270,71 @@ void BGEvolution::create(const BGEVParameters &params)
 	stride = nMax+1;
 	gamma = params.gamma;
 	output = params.output;
+	interactionLength = params.interactionLength;
+	interactionType = params.interactionType;
+	reducedCoefficients = params.reducedCoefficients;
 
-	std::vector<int_fast32_t> A;
-	for (int_fast32_t i=-nMax;i<=nMax;++i)
+		std::vector<int_fast32_t> A;
+	if (interactionType=="contact")
 	{
+		for (int_fast32_t i=-nMax;i<=nMax;++i)
+		{
+			for (int_fast32_t j=-nMax;j<=nMax;++j)
+			for (int_fast32_t k=-nMax;k<=nMax;++k)
+			for (int_fast32_t l=-nMax;l<=nMax;++l)
+				if (k+l-j==i)
+				{
+					A.push_back(j+nMax);
+					A.push_back(k+nMax);
+					A.push_back(l+nMax);
+				}
+
+			indices.push_back(A);
+			A.clear();
+		}
+	}
+	else
+	{
+		indicesCount = (int_fast32_t*)aligned_alloc(sizeof(int_fast32_t),(2*nMax+2)*sizeof(int_fast32_t));
+		indicesCount[0] = 0;
+
+		for (int_fast32_t i=-nMax;i<=nMax;++i)
+		{
+				indicesCount[i+1+nMax] = indicesCount[i+nMax];
+			for (int_fast32_t j=-nMax;j<=nMax;++j)
+			for (int_fast32_t k=-nMax;k<=nMax;++k)
+			for (int_fast32_t l=-nMax;l<=nMax;++l)
+				if (k+l-j==i)
+				{
+					A.push_back(j+nMax);
+					A.push_back(k+nMax);
+					A.push_back(l+nMax);
+
+					++indicesCount[i+1+nMax];
+				}
+
+			indices.push_back(A);
+			A.clear();
+		}
+
+		interactionCoefficients = (__m256d*)aligned_alloc(sizeof(__m256d),(indicesCount[2*nMax+1])*sizeof(__m256d));
+		__m256d *p;
+		p = interactionCoefficients;
+		for (int_fast32_t i=-nMax;i<=nMax;++i)
 		for (int_fast32_t j=-nMax;j<=nMax;++j)
 		for (int_fast32_t k=-nMax;k<=nMax;++k)
 		for (int_fast32_t l=-nMax;l<=nMax;++l)
 			if (k+l-j==i)
 			{
-				A.push_back(j+nMax);
-				A.push_back(k+nMax);
-				A.push_back(l+nMax);
-			}
-		indices.push_back(A);
-		A.clear();
-	}
+				*(p) = _mm256_set1_pd(params.reducedCoefficients[abs(k-j)]);
+				p++;
+			} 
 
-	pData = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d)*(batchSize+1));
-	pCurrent = pData;
+	}
+	
 	pDerivative = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d));
 	k1 = (__m256d*)aligned_alloc(sizeof(__m256d),11*stride*sizeof(__m256d));
-
+	pData = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d)*(batchSize+1));
 	initial_conditions = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d));
 	baabtab = (__m256d*)aligned_alloc(sizeof(__m256d),(2*nMax+1)*sizeof(__m256d));
 
