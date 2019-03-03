@@ -37,6 +37,7 @@ bin/bgev: $(EV_OBJECTS) $(LIB)
 
 .PHONY: clean
 clean:
-	rm -rRf build
+	rm -rf build
 	rm -f $(ALL)
-	rmdir lib bin
+	rmdir lib bin 2> /dev/null || true
+
