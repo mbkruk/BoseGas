@@ -134,19 +134,25 @@ int main(int argc, const char *argv[])
 
 	if (params.interactionType=="gauss" || params.interactionType=="ddi")
 	{
-		std::cin >> params.interactionLength;
+		std::cin >> params.interactionRange;
 		double x;
-		for (int i=0;i<=2*params.nMax;++i)
+		for (int_fast32_t i=0;i<=2*params.nMax;++i)
 		{
 			std::cin >> x;
 			params.reducedCoefficients.push_back(x);
 		}
 	}
+	else
+	if (params.interactionType!="contact")
+	{
+		std::cout << "Unknown interaction type";
+		return 1;
+	}
 
 	evolution.create(params);
-	evolution.stdinICInit();
+	evolution.stdinInit();
 	evolution.printParameters();
-	for(int i=0;i<params.batchCount;++i)
+	for(int_fast32_t i=0;i<params.batchCount;++i)
 	{
 		evolution.icInit();	
 		evolution.evolve(params.batchSize);

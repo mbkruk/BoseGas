@@ -79,7 +79,7 @@ void BGEvolution::derivative(const __m256d *r)
 
 void BGEvolution::derivativeLong(const __m256d *r)
 {
-	//filling baab array
+	//derivative with presence of long-interaction non-trivial coefficients
 	double a = (*(r))[0];
 	double b = (*(r))[1];
 	baabtab[nMax] =  _mm256_set_pd(b,a,a,b);
@@ -95,13 +95,13 @@ void BGEvolution::derivativeLong(const __m256d *r)
 		baabtab[nMax-i] =  _mm256_set_pd(d,c,c,d);
 	}
 
-	//A,B,C,D are used to calculate data for a_k, b_k, a_-k, b_-k
+	
 	__m256d A = _mm256_setzero_pd();
 	__m256d B = _mm256_setzero_pd();
 	__m256d C = _mm256_setzero_pd();
 	__m256d D = _mm256_setzero_pd();
 	__m256d sgn = _mm256_set_pd(-1.0,1.0,1.0,1.0);
-	for (int_fast32_t j=0;j<indices[nMax].size();j+=3) //calculate sum for a_0 and b_0
+	for (int_fast32_t j=0;j<indices[nMax].size();j+=3) 
 		{
 			A = A+interactionCoefficients[indicesCount[nMax]+j/3]*baabtab[indices[nMax][j]]*_mm256_permute_pd(baabtab[indices[nMax][j+1]],0b0110)*
 			_mm256_permute_pd(baabtab[indices[nMax][j+2]],0b0000)*sgn;
@@ -112,13 +112,13 @@ void BGEvolution::derivativeLong(const __m256d *r)
 	b = -2.0*gamma*(B[0]+B[1]+B[2]+B[3]);
 	*(pDerivative) = _mm256_set_pd(b,a,b,a);
 
-	for (int_fast32_t i=1;i<=nMax;++i) //calculate  a_i b_i a_-i, b_i
+	for (int_fast32_t i=1;i<=nMax;++i) 
 	{
 		A = _mm256_setzero_pd();
 		B = _mm256_setzero_pd();
 		C = _mm256_setzero_pd();
 		D = _mm256_setzero_pd();
-		for (int_fast32_t j=0;j<indices[nMax+i].size();j+=3) //calculate sum for a_i and b_i
+		for (int_fast32_t j=0;j<indices[nMax+i].size();j+=3) 
 		{
 			A = A+interactionCoefficients[indicesCount[nMax+i]+j/3]*baabtab[indices[nMax+i][j]]*_mm256_permute_pd(baabtab[indices[nMax+i][j+1]],0b0110)*
 			_mm256_permute_pd(baabtab[indices[nMax+i][j+2]],0b0000)*sgn;
@@ -126,7 +126,7 @@ void BGEvolution::derivativeLong(const __m256d *r)
 			_mm256_permute_pd(baabtab[indices[nMax+i][j+2]],0b1111)*sgn;
 		}
 
-		for (int_fast32_t j=0;j<indices[nMax-i].size();j+=3) //calculate sum for a_-i and b_-i
+		for (int_fast32_t j=0;j<indices[nMax-i].size();j+=3) 
 		{
 			C = C+interactionCoefficients[indicesCount[nMax-i]+j/3]*baabtab[indices[nMax-i][j]]*_mm256_permute_pd(baabtab[indices[nMax-i][j+1]],0b0110)*
 			_mm256_permute_pd(baabtab[indices[nMax-i][j+2]],0b0000)*sgn;
@@ -187,6 +187,7 @@ void BGEvolution::evolve(uint_fast32_t steps)
 		}
 	}
 	else
+	if (interactionType=="contact")
 	{
 		while (steps--)
 		{
@@ -270,40 +271,21 @@ void BGEvolution::create(const BGEVParameters &params)
 	stride = nMax+1;
 	gamma = params.gamma;
 	output = params.output;
-	interactionLength = params.interactionLength;
+	interactionRange = params.interactionRange;
 	interactionType = params.interactionType;
 
-	for(int i=0;i<params.reducedCoefficients.size();++i)
-	reducedCoefficients.push_back(params.reducedCoefficients[i]);
+	for (int_fast32_t i=0;i<params.reducedCoefficients.size();++i)
+		reducedCoefficients.push_back(params.reducedCoefficients[i]);
 
-
-		std::vector<int_fast32_t> A;
-	if (interactionType=="contact")
-	{
-		for (int_fast32_t i=-nMax;i<=nMax;++i)
-		{
-			for (int_fast32_t j=-nMax;j<=nMax;++j)
-			for (int_fast32_t k=-nMax;k<=nMax;++k)
-			for (int_fast32_t l=-nMax;l<=nMax;++l)
-				if (k+l-j==i)
-				{
-					A.push_back(j+nMax);
-					A.push_back(k+nMax);
-					A.push_back(l+nMax);
-				}
-
-			indices.push_back(A);
-			A.clear();
-		}
-	}
-	else
+	std::vector<int_fast32_t> A;
+	if (interactionType=="gauss"||interactionType=="ddi")
 	{
 		indicesCount = (int_fast32_t*)aligned_alloc(sizeof(int_fast32_t),(2*nMax+2)*sizeof(int_fast32_t));
 		indicesCount[0] = 0;
 
 		for (int_fast32_t i=-nMax;i<=nMax;++i)
 		{
-				indicesCount[i+1+nMax] = indicesCount[i+nMax];
+			indicesCount[i+1+nMax] = indicesCount[i+nMax];
 			for (int_fast32_t j=-nMax;j<=nMax;++j)
 			for (int_fast32_t k=-nMax;k<=nMax;++k)
 			for (int_fast32_t l=-nMax;l<=nMax;++l)
@@ -328,16 +310,34 @@ void BGEvolution::create(const BGEVParameters &params)
 		for (int_fast32_t k=-nMax;k<=nMax;++k)
 		for (int_fast32_t l=-nMax;l<=nMax;++l)
 			if (k+l-j==i)
-			{
-				*(p) = _mm256_set1_pd(params.reducedCoefficients[abs(k-j)]);
-				p++;
-			} 
+				{
+					*p = _mm256_set1_pd(params.reducedCoefficients[abs(k-j)]);
+					p++;
+				} 
+	}
+	else
+	if (interactionType=="contact") 
+	{
+		for (int_fast32_t i=-nMax;i<=nMax;++i)
+		{
+			for (int_fast32_t j=-nMax;j<=nMax;++j)
+			for (int_fast32_t k=-nMax;k<=nMax;++k)
+			for (int_fast32_t l=-nMax;l<=nMax;++l)
+				if (k+l-j==i)
+				{
+					A.push_back(j+nMax);
+					A.push_back(k+nMax);
+					A.push_back(l+nMax);
+				}
 
+			indices.push_back(A);
+			A.clear();
+		}
 	}
 	
+	pData = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d)*(batchSize+1));
 	pDerivative = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d));
 	k1 = (__m256d*)aligned_alloc(sizeof(__m256d),11*stride*sizeof(__m256d));
-	pData = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d)*(batchSize+1));
 	initial_conditions = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d));
 	baabtab = (__m256d*)aligned_alloc(sizeof(__m256d),(2*nMax+1)*sizeof(__m256d));
 
@@ -360,7 +360,7 @@ void BGEvolution::destroy()
 	free(k1);
 }
 
-void BGEvolution::stdinICInit()
+void BGEvolution::stdinInit()
 {
 	double a, b;
 	for(int_fast32_t i=-nMax;i<=nMax;++i)
@@ -401,6 +401,9 @@ void BGEvolution::stdinICInit()
 	output_file << "Number of particles: " << particleCount << '\n';
 	output_file << "Nmax: " << nMax << '\n';
 	output_file << "Gamma: " << gamma << '\n';
+	output_file << "Interaction type: " << interactionType << '\n';
+	if (interactionType=="gauss" || interactionType=="ddi")
+		output_file << "Interaction range: " << interactionRange << '\n';
 	output_file << "Step size: " << h << '\n';
 	output_file << "Batch size: " << batchSize << '\n';
 	output_file << "Batch count: " << batchCount << '\n';
@@ -420,25 +423,27 @@ void BGEvolution::icInit()
 
 void BGEvolution::printParameters()
 {
-	std::cout << "Number of particles: " << particleCount << '\n';
-	std::cout << "Nmax: " << nMax << '\n';
-	std::cout << "Gamma: " << gamma << '\n';
-	std::cout << "Step size: " << h << '\n';
-	std::cout << "Batch size: " << batchSize << '\n';
-	std::cout << "Batch count: " << batchCount << '\n' << '\n';
-	std::cout << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0" << std::setw(dist) << 
+	std::cerr << "Number of particles: " << particleCount << '\n';
+	std::cerr << "Nmax: " << nMax << '\n';
+	std::cerr << "Gamma: " << gamma << '\n';
+	std::cerr << "Interaction type: " << interactionType << '\n';
+	if (interactionType=="gauss" || interactionType=="ddi")
+		std::cerr << "Interaction range: " << interactionRange << '\n';
+	std::cerr << "Step size: " << h << '\n';
+	std::cerr << "Batch size: " << batchSize << '\n';
+	std::cerr << "Batch count: " << batchCount << '\n' << '\n';
+	std::cerr << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0" << std::setw(dist) << 
 	"Fluctuations n0" << std::setw(dist) << "Energy" <<  std::setw(dist) <<
 	"Particle count" << std::setw(dist) << "Momentum" << '\n';
 
 }
 
-void BGEvolution::saveToFile(const double avg, const double fluc, const int i)
+void BGEvolution::saveToFile(const double avg, const double fluc, const int_fast32_t i)
 {
 	std::fstream output_file;
 	output_file.open(output,std::ios::app);
 
-	output_file << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(10) << avg << std::setw(dist) << 
-	fluc << std::setw(dist) << kineticEnergy()+potentialEnergy() <<  std::setw(dist) <<
-	nAll() << std::setw(dist) << momentum() << '\n';
+	output_file << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(10) << avg << std::setw(dist) << fluc
+	<< std::setw(dist) << kineticEnergy()+potentialEnergy() <<  std::setw(dist) << nAll() << std::setw(dist) << momentum() << '\n';
 	output_file.close();
 }

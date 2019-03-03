@@ -10,7 +10,7 @@ struct BGEVParameters
 {
 	uint_fast32_t particleCount;
 	int_fast32_t nMax;
-	double gamma, h, interactionLength;
+	double gamma, h, interactionRange;
 	uint_fast32_t batchSize, batchCount;
 	std::string output;
 	std::string interactionType;
@@ -28,9 +28,11 @@ private:
 	size_t stride;
 	double gamma;
 	double h;
-	double interactionLength;
+	double interactionRange;
 	std::string output;
 	std::string interactionType;
+
+	// 2*nMax+1 interaction coefficients are stored in reducedCoefficients
 	std::vector<double> reducedCoefficients;
 
 	// non-zero interaction sum factors
@@ -50,7 +52,9 @@ private:
 	__m256d *pCurrent;
 	__m256d *pDerivative;
 
+	// {0, number of indices for k=-nmax, number of indices for k=-nmax+number of indices for k=-nmax, number of indices for k=-nmax+1,...}
 	int_fast32_t *indicesCount;
+	// full array of coefficients
 	__m256d *interactionCoefficients;
 
 	__m256d *k1, *k2, *k3, *k4, *k5, *k6;
@@ -65,9 +69,9 @@ public:
 	void create(const BGEVParameters &params);
 	void destroy();
 	void icInit();
-	void saveToFile(const double avg, const double fluc, const int i);
+	void saveToFile(const double avg, const double fluc, const int_fast32_t i);
 	
-	void stdinICInit();
+	void stdinInit();
 	void printParameters();
 
 	double averageNZero();
