@@ -201,7 +201,7 @@ void ClassicalFieldsMC::CustomInteraction::prepare(double gamma_, size_t alphaSi
 {
 	gamma = gamma_;
 	if (coefficients.size()<2*alphaSize-1)
-		std::cerr << "Custom Interaction error" << std::endl;
+		std::cerr << "too few custom interaction coefficients!" << std::endl;
 	indices.clear();
 	for (uint32_t n=0;n<alphaSize;++n)
 	for (uint32_t m=0;m<alphaSize;++m)

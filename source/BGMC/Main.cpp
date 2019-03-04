@@ -75,6 +75,45 @@ int main(int argc, const char *argv[])
 		}
 	);
 
+	po.addOption("-g","--gamma <number>","interaction strength",2,
+		[&](const char *arg[])
+		{
+			params.gamma = std::stod(arg[1]);
+			return 0;
+		}
+	);
+
+	po.addOption("-I","--interaction <file>","set custom interaction",2,
+		[&](const char *arg[])
+		{
+			params.interactionType = "custom";
+			std::ifstream f(arg[1]);
+			if (!f.is_open())
+			{
+				std::cerr << "file `" << arg[1] << "` not open" << std::endl;
+				return 1;
+			}
+			{
+				std::string word;
+				if (!(f>>word) || word!="interaction_coefficients")
+				{
+					std::cerr << "wrong file format" << std::endl;
+					return 1;
+				}
+			}
+			double c;
+			while (!f.eof())
+			{
+				if (!(f>>c))
+					break;
+				params.interactionCoefficients.push_back(c);
+			}
+
+			f.close();
+			return 0;
+		}
+	);
+
 	po.addOption("","",nullptr,1,
 		[&](const char *arg[])
 		{
