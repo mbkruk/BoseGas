@@ -11,6 +11,7 @@ struct BGMCParameters
 {
 	uint32_t particleCount;
 	int32_t nMax;
+	int32_t extraModePairs;
 	double beta;
 	double gamma;
 	uint32_t seed;

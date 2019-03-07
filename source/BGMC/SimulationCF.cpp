@@ -107,14 +107,17 @@ int32_t bgSimulationCF(BGMCParameters &params)
 		}
 	}
 	else
+	{
 		pInteraction = new ClassicalFieldsMC::NoInteraction;
+		std::cerr << "no interaction" << std::endl;
+	}
 	cfmc.setInteraction(pInteraction);
 	random.seed(params.seed);
 
 	cfmc.initialize(params);
 	cfmc.generate(random);
 
-	Info::printHead(std::cerr);
+	Info::printHead(std::cout);
 
 	BGMC::Energy energy;
 
@@ -134,11 +137,11 @@ int32_t bgSimulationCF(BGMCParameters &params)
 			}
 		}
 		batchInfo.process();
-		batchInfo.print(std::cerr,batch);
+		batchInfo.print(std::cout,batch);
 	}
 
 	totalInfo.process();
-	totalInfo.print(std::cerr,"total");
+	totalInfo.print(std::cout,"total");
 
 	for(auto &ar : alphas)
 	{

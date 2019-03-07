@@ -98,7 +98,7 @@ void ClassicalFieldsMC::initialize(const BGMCParameters &params)
 	N = params.particleCount;
 	beta = params.beta;
 	gamma = params.gamma;
-	nMax = params.nMax;
+	nMax = params.nMax+params.extraModePairs;
 
 	alpha.alpha.resize(2*nMax+1);
 	alpha0.alpha.resize(2*nMax+1);

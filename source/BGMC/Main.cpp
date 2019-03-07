@@ -22,6 +22,7 @@ int main(int argc, const char *argv[])
 
 	params.particleCount = 1;
 	params.nMax = 0;
+	params.extraModePairs = 0;
 	params.beta = 1.0;
 	params.gamma = 0.0;
 	params.seed = generateSeed();
@@ -53,6 +54,14 @@ int main(int argc, const char *argv[])
 		{
 			params.nMax = std::stol(arg[1]);
 			params.beta = kCutoffConst/params.nMax/params.nMax;
+			return 0;
+		}
+	);
+
+	po.addOption("-e","--extra <count>","extra mode pairs",2,
+		[&](const char *arg[])
+		{
+			params.extraModePairs = std::stol(arg[1]);
 			return 0;
 		}
 	);
