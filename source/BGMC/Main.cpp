@@ -27,9 +27,9 @@ int main(int argc, const char *argv[])
 	params.gamma = 0.0;
 	params.seed = generateSeed();
 	params.batchCount = 9;
-	params.batchSize = 1024*1024;
+	params.batchSize = 1024*64;
 	params.skip = 4;
-	params.interactionType = "none";
+	params.interactionType = "contact";
 
 	po.addOption("-h","--help","produce help message",1,[&](const char *[]){help=true;return 0;});
 
@@ -192,10 +192,10 @@ int main(int argc, const char *argv[])
 			return r;
 	}
 
-	std::cerr << "particleCount = " << params.particleCount << std::endl;
+	/*std::cerr << "particleCount = " << params.particleCount << std::endl;
 	std::cerr << "Nmax = " << params.nMax << std::endl;
 	std::cerr << "beta = " << params.beta << std::endl;
-	std::cerr << "seed = " << params.seed << std::endl;
+	std::cerr << "seed = " << params.seed << std::endl;*/
 
 	if (r=bgSimulationCF(params))
 		return r;

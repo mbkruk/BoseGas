@@ -92,7 +92,7 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	{
 		if (params.interactionType=="contact")
 		{
-			std::cerr << "using contact interaction" << std::endl;
+			//std::cerr << "using contact interaction" << std::endl;
 			pInteraction = new ClassicalFieldsMC::ContactInteraction;
 		}
 		else
@@ -109,7 +109,7 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	else
 	{
 		pInteraction = new ClassicalFieldsMC::NoInteraction;
-		std::cerr << "no interaction" << std::endl;
+		//std::cerr << "no interaction" << std::endl;
 	}
 	cfmc.setInteraction(pInteraction);
 	random.seed(params.seed);
