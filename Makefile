@@ -5,7 +5,7 @@ DEBUG=
 GPP_VERSION=$(shell g++ -dumpversion)
 STD=$(shell if [ "$(GPP_VERSION)" \> "5" ]; then echo "-std=c++11"; else echo "-std=c++0x"; fi)
 CFLAGS=-mavx -O3
-LDFLAGS=$(shell [ "$(GPP_VERSION)" \> "5" ] && echo "-flto")
+LDFLAGS=$(shell if [ "$(GPP_VERSION)" \> "5" ]; then echo "-flto"; else echo "-lrt"; fi)
 
 .PHONY: all
 all: $(ALL)
@@ -29,7 +29,7 @@ $(LIB): $(LIB_OBJECTS)
 
 bin/bgmc: $(MC_OBJECTS) $(LIB)
 	@mkdir -p $(@D)
-	g++ -s $(LDFLAGS) $(DEBUG) $^ -o $@ -lrt
+	g++ -s $(LDFLAGS) $(DEBUG) $^ -o $@
 
 bin/bgev: $(EV_OBJECTS) $(LIB)
 	@mkdir -p $(@D)
@@ -40,4 +40,3 @@ clean:
 	rm -rf build
 	rm -f $(ALL)
 	rmdir lib bin 2> /dev/null || true
-
