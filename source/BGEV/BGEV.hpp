@@ -68,11 +68,12 @@ public:
 
 	void create(const BGEVParameters &params);
 	void destroy();
+
 	void icInit();
-	void saveToFile(const double avg, const double fluc, const int_fast32_t i);
-	
 	void stdinInit();
 	void printParameters();
+	void saveToFile(const double avg, const double fluc, const int_fast32_t i);
+	void getLastPoint();
 
 	double averageNZero();
 	double fluctuationsNZero(const double n0);

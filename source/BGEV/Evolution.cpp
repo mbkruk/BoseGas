@@ -321,7 +321,7 @@ void BGEvolution::create(const BGEVParameters &params)
 		for (int_fast32_t l=-nMax;l<=nMax;++l)
 			if (k+l-j==i)
 				{
-					*p = _mm256_set1_pd(params.reducedCoefficients[abs(k-j)]);
+					*p = _mm256_set1_pd(reducedCoefficients[abs(k-j)]);
 					p++;
 				}
 	}
@@ -420,6 +420,7 @@ void BGEvolution::stdinInit()
 	output_file << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0" << std::setw(dist) <<
 	"Fluctuations n0" << std::setw(dist) << "Energy" <<  std::setw(dist) <<
 	"Particle count" << std::setw(dist) << "Momentum" << '\n';
+	output_file.close();
 
 }
 
@@ -455,5 +456,30 @@ void BGEvolution::saveToFile(const double avg, const double fluc, const int_fast
 
 	output_file << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(10) << avg << std::setw(dist) << fluc
 	<< std::setw(dist) << kineticEnergy()+potentialEnergy() <<  std::setw(dist) << nAll() << std::setw(dist) << momentum() << '\n';
+	output_file.close();
+}
+
+void BGEvolution::getLastPoint()
+{
+	std::fstream output_file;
+	output_file.open(output,std::ios::app);
+	output_file << '\n' << "Last point:" << '\n';
+	double check=0;
+	for (int_fast32_t i=-nMax;i<=nMax;++i)
+	{
+		if (i<0)
+			output_file << (*(pCurrent+abs(i)))[2] << '\n';
+		else
+			output_file << (*(pCurrent+i))[0] << '\n';
+	}
+
+		for (int_fast32_t i=-nMax;i<=nMax;++i)
+	{
+		if (i<0)
+			output_file << (*(pCurrent+abs(i)))[3] << '\n';
+		else
+			output_file << (*(pCurrent+i))[1] << '\n';
+	}
+
 	output_file.close();
 }

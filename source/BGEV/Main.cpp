@@ -162,6 +162,8 @@ int main(int argc, const char *argv[])
 		flucs[i] << std::setw(dist) << evolution.kineticEnergy()+evolution.potentialEnergy() <<  std::setw(dist) <<
 		evolution.nAll() << std::setw(dist) << evolution.momentum() << '\n';
 		evolution.saveToFile(avgs[i],flucs[i],i);
+		if (i==params.batchCount-1)
+			evolution.getLastPoint();
 	}
 	evolution.destroy();
 
