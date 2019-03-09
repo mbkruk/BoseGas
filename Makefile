@@ -29,7 +29,7 @@ $(LIB): $(LIB_OBJECTS)
 
 bin/bgmc: $(MC_OBJECTS) $(LIB)
 	@mkdir -p $(@D)
-	g++ -s $(LDFLAGS) $(DEBUG) $^ -o $@
+	g++ -s $(LDFLAGS) $(DEBUG) $^ -o $@ -lrt
 
 bin/bgev: $(EV_OBJECTS) $(LIB)
 	@mkdir -p $(@D)
