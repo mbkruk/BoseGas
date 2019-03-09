@@ -9,8 +9,18 @@
 #include "BGEV.hpp"
 
 const int_fast32_t dist = 2*sizeof(double)+9;
+
+#ifndef _ISOC11_SOURCE
 #ifdef _WIN32
 #define aligned_alloc(alignment,size) _aligned_malloc((size),(alignment))
+#elif _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
+static void* aligned_alloc(size_t alignment, size_t size)
+{
+	void *ptr;
+	posix_memalign(&ptr,alignment,size);
+	return ptr;
+}
+#endif
 #endif
 
 void BGEvolution::derivative(const __m256d *r)
@@ -95,13 +105,13 @@ void BGEvolution::derivativeLong(const __m256d *r)
 		baabtab[nMax-i] =  _mm256_set_pd(d,c,c,d);
 	}
 
-	
+
 	__m256d A = _mm256_setzero_pd();
 	__m256d B = _mm256_setzero_pd();
 	__m256d C = _mm256_setzero_pd();
 	__m256d D = _mm256_setzero_pd();
 	__m256d sgn = _mm256_set_pd(-1.0,1.0,1.0,1.0);
-	for (int_fast32_t j=0;j<indices[nMax].size();j+=3) 
+	for (int_fast32_t j=0;j<indices[nMax].size();j+=3)
 		{
 			A = A+interactionCoefficients[indicesCount[nMax]+j/3]*baabtab[indices[nMax][j]]*_mm256_permute_pd(baabtab[indices[nMax][j+1]],0b0110)*
 			_mm256_permute_pd(baabtab[indices[nMax][j+2]],0b0000)*sgn;
@@ -112,13 +122,13 @@ void BGEvolution::derivativeLong(const __m256d *r)
 	b = -2.0*gamma*(B[0]+B[1]+B[2]+B[3]);
 	*(pDerivative) = _mm256_set_pd(b,a,b,a);
 
-	for (int_fast32_t i=1;i<=nMax;++i) 
+	for (int_fast32_t i=1;i<=nMax;++i)
 	{
 		A = _mm256_setzero_pd();
 		B = _mm256_setzero_pd();
 		C = _mm256_setzero_pd();
 		D = _mm256_setzero_pd();
-		for (int_fast32_t j=0;j<indices[nMax+i].size();j+=3) 
+		for (int_fast32_t j=0;j<indices[nMax+i].size();j+=3)
 		{
 			A = A+interactionCoefficients[indicesCount[nMax+i]+j/3]*baabtab[indices[nMax+i][j]]*_mm256_permute_pd(baabtab[indices[nMax+i][j+1]],0b0110)*
 			_mm256_permute_pd(baabtab[indices[nMax+i][j+2]],0b0000)*sgn;
@@ -126,7 +136,7 @@ void BGEvolution::derivativeLong(const __m256d *r)
 			_mm256_permute_pd(baabtab[indices[nMax+i][j+2]],0b1111)*sgn;
 		}
 
-		for (int_fast32_t j=0;j<indices[nMax-i].size();j+=3) 
+		for (int_fast32_t j=0;j<indices[nMax-i].size();j+=3)
 		{
 			C = C+interactionCoefficients[indicesCount[nMax-i]+j/3]*baabtab[indices[nMax-i][j]]*_mm256_permute_pd(baabtab[indices[nMax-i][j+1]],0b0110)*
 			_mm256_permute_pd(baabtab[indices[nMax-i][j+2]],0b0000)*sgn;
@@ -163,7 +173,7 @@ void BGEvolution::evolve(uint_fast32_t steps)
 				k3[i] = *(pDerivative+i)*H;
 			for (int_fast32_t i=0;i<=nMax;++i)
 				yk3[i] = *(pCurrent+i)+*(k1+i)*b[4]+*(k2+i)*b[5]+*(k3+i)*b[6];
-			
+
 			derivativeLong(yk3);
 			for (int_fast32_t i=0;i<=nMax;++i)
 				k4[i] = *(pDerivative+i)*H;
@@ -208,7 +218,7 @@ void BGEvolution::evolve(uint_fast32_t steps)
 				k3[i] = *(pDerivative+i)*H;
 			for (int_fast32_t i=0;i<=nMax;++i)
 				yk3[i] = *(pCurrent+i)+*(k1+i)*b[4]+*(k2+i)*b[5]+*(k3+i)*b[6];
-			
+
 			derivative(yk3);
 			for (int_fast32_t i=0;i<=nMax;++i)
 				k4[i] = *(pDerivative+i)*H;
@@ -313,10 +323,10 @@ void BGEvolution::create(const BGEVParameters &params)
 				{
 					*p = _mm256_set1_pd(params.reducedCoefficients[abs(k-j)]);
 					p++;
-				} 
+				}
 	}
 	else
-	if (interactionType=="contact") 
+	if (interactionType=="contact")
 	{
 		for (int_fast32_t i=-nMax;i<=nMax;++i)
 		{
@@ -334,7 +344,7 @@ void BGEvolution::create(const BGEVParameters &params)
 			A.clear();
 		}
 	}
-	
+
 	pData = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d)*(batchSize+1));
 	pDerivative = (__m256d*)aligned_alloc(sizeof(__m256d),stride*sizeof(__m256d));
 	k1 = (__m256d*)aligned_alloc(sizeof(__m256d),11*stride*sizeof(__m256d));
@@ -407,7 +417,7 @@ void BGEvolution::stdinInit()
 	output_file << "Step size: " << h << '\n';
 	output_file << "Batch size: " << batchSize << '\n';
 	output_file << "Batch count: " << batchCount << '\n';
-	output_file << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0" << std::setw(dist) << 
+	output_file << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0" << std::setw(dist) <<
 	"Fluctuations n0" << std::setw(dist) << "Energy" <<  std::setw(dist) <<
 	"Particle count" << std::setw(dist) << "Momentum" << '\n';
 
@@ -432,7 +442,7 @@ void BGEvolution::printParameters()
 	std::cerr << "Step size: " << h << '\n';
 	std::cerr << "Batch size: " << batchSize << '\n';
 	std::cerr << "Batch count: " << batchCount << '\n' << '\n';
-	std::cerr << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0" << std::setw(dist) << 
+	std::cerr << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0" << std::setw(dist) <<
 	"Fluctuations n0" << std::setw(dist) << "Energy" <<  std::setw(dist) <<
 	"Particle count" << std::setw(dist) << "Momentum" << '\n';
 
