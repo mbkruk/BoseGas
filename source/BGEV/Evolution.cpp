@@ -452,7 +452,7 @@ void BGEvolution::printParameters()
 void BGEvolution::saveToFile(const double avg, const double fluc, const int_fast32_t i)
 {
 	std::fstream output_file;
-	output_file.open(output,std::ios::app);
+	output_file.open(output,std::ios::app|std::ios::out);
 
 	output_file << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(10) << avg << std::setw(dist) << fluc
 	<< std::setw(dist) << kineticEnergy()+potentialEnergy() <<  std::setw(dist) << nAll() << std::setw(dist) << momentum() << '\n';
@@ -462,7 +462,7 @@ void BGEvolution::saveToFile(const double avg, const double fluc, const int_fast
 void BGEvolution::getLastPoint()
 {
 	std::fstream output_file;
-	output_file.open(output,std::ios::app);
+	output_file.open(output,std::ios::app|std::ios::out);
 	output_file << '\n' << "Last point:" << '\n';
 	for (int_fast32_t i=-nMax;i<=nMax;++i)
 	{
