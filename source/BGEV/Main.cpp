@@ -152,7 +152,8 @@ int main(int argc, const char *argv[])
 	evolution.create(params);
 	evolution.stdinInit();
 	evolution.printParameters();
-	for(int_fast32_t i=0;i<params.batchCount;++i)
+	
+	for (int_fast32_t i=0;i<params.batchCount;++i)
 	{
 		evolution.icInit();	
 		evolution.evolve(params.batchSize);

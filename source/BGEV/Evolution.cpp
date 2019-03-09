@@ -464,7 +464,6 @@ void BGEvolution::getLastPoint()
 	std::fstream output_file;
 	output_file.open(output,std::ios::app);
 	output_file << '\n' << "Last point:" << '\n';
-	double check=0;
 	for (int_fast32_t i=-nMax;i<=nMax;++i)
 	{
 		if (i<0)
