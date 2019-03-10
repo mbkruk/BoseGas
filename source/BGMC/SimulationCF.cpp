@@ -156,14 +156,14 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	output_file.open(params.output,std::ios::out);
 
 	output_file << params.particleCount << '\n';
-	output_file << params.nMax << '\n';
+	output_file << params.nMax+params.extraModePairs << '\n';
 	output_file << params.gamma << '\n';
 	output_file << params.interactionType << '\n' << '\n';
 
-	for(int_fast32_t i=0; i<2*params.nMax+1;++i)
+	for(int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
 		output_file << std::real(alphas[0].alpha[i]) << '\n';
 
-	for(int_fast32_t i=0; i<2*params.nMax+1;++i)
+	for(int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
 		output_file << std::imag(alphas[0].alpha[i]) << '\n';
 
 	output_file.close();
