@@ -105,19 +105,18 @@ void BGEvolution::derivativeLong(const __m256d *r)
 		baabtab[nMax-i] =  _mm256_set_pd(d,c,c,d);
 	}
 
-
 	__m256d A = _mm256_setzero_pd();
 	__m256d B = _mm256_setzero_pd();
 	__m256d C = _mm256_setzero_pd();
 	__m256d D = _mm256_setzero_pd();
 	__m256d sgn = _mm256_set_pd(-1.0,1.0,1.0,1.0);
 	for (int_fast32_t j=0;j<indices[nMax].size();j+=3)
-		{
-			A = A+interactionCoefficients[indicesCount[nMax]+j/3]*baabtab[indices[nMax][j]]*_mm256_permute_pd(baabtab[indices[nMax][j+1]],0b0110)*
-			_mm256_permute_pd(baabtab[indices[nMax][j+2]],0b0000)*sgn;
-			B = B+interactionCoefficients[indicesCount[nMax]+j/3]*_mm256_permute_pd(baabtab[indices[nMax][j]],0b0101)*_mm256_permute_pd(baabtab[indices[nMax][j+1]],0b1001)*
-			_mm256_permute_pd(baabtab[indices[nMax][j+2]],0b1111)*sgn;
-		}
+	{
+		A = A+interactionCoefficients[indicesCount[nMax]+j/3]*baabtab[indices[nMax][j]]*_mm256_permute_pd(baabtab[indices[nMax][j+1]],0b0110)*
+		_mm256_permute_pd(baabtab[indices[nMax][j+2]],0b0000)*sgn;
+		B = B+interactionCoefficients[indicesCount[nMax]+j/3]*_mm256_permute_pd(baabtab[indices[nMax][j]],0b0101)*_mm256_permute_pd(baabtab[indices[nMax][j+1]],0b1001)*
+		_mm256_permute_pd(baabtab[indices[nMax][j+2]],0b1111)*sgn;
+	}
 	a = 2.0*gamma*(A[0]+A[1]+A[2]+A[3]);
 	b = -2.0*gamma*(B[0]+B[1]+B[2]+B[3]);
 	*(pDerivative) = _mm256_set_pd(b,a,b,a);
@@ -149,8 +148,9 @@ void BGEvolution::derivativeLong(const __m256d *r)
 	}
 }
 
-void BGEvolution::evolve(uint_fast32_t steps)
+void BGEvolution::evolve()
 {
+	uint_fast32_t steps = batchSize;
 	if (interactionType=="gauss" || interactionType=="ddi")
 	{
 
@@ -193,7 +193,7 @@ void BGEvolution::evolve(uint_fast32_t steps)
 			for (int_fast32_t i=0;i<=nMax;++i)
 				*(pCurrent+stride+i) = *(pCurrent+i)+*(k1+i)*c[1]+*(k3+i)*c[3]+*(k4+i)*c[4]+*(k6+i)*c[6];
 
-				pCurrent += stride;
+			pCurrent += stride;
 		}
 	}
 	else
@@ -238,7 +238,7 @@ void BGEvolution::evolve(uint_fast32_t steps)
 			for (int_fast32_t i=0;i<=nMax;++i)
 				*(pCurrent+stride+i) = *(pCurrent+i)+*(k1+i)*c[1]+*(k3+i)*c[3]+*(k4+i)*c[4]+*(k6+i)*c[6];
 
-				pCurrent += stride;
+			pCurrent += stride;
 		}
 	}
 
@@ -361,10 +361,30 @@ void BGEvolution::create(const BGEVParameters &params)
 	yk3 = yk2+stride;
 	yk4 = yk3+stride;
 	yk5 = yk4+stride;
+
+	threadCount = params.threadCount;
+
+	if (threadCount>0)
+	{
+		pThreads = new std::thread[threadCount];
+
+		for (uint32_t i=0;i<threadCount;++i)
+			pThreads[i] = std::thread(thread,this,i);
+	}
+	else
+		pThreads = nullptr;
 }
 
 void BGEvolution::destroy()
 {
+	if (pThreads)
+	{
+		for (uint32_t i=0;i<threadCount;++i)
+			pThreads[i].join();
+		delete [] pThreads;
+		pThreads = nullptr;
+		threadCount = 0;
+	}
 	free(pData);
 	free(pDerivative);
 	free(k1);
@@ -398,7 +418,7 @@ void BGEvolution::stdinInit()
 		if (i<0)
 			(*(initial_conditions+abs(i)))[3] = b;
 		else
-		if(i==0)
+		if (i==0)
 		{
 			(*(initial_conditions))[1] = b;
 			(*(initial_conditions))[3] = b;
@@ -421,7 +441,6 @@ void BGEvolution::stdinInit()
 	"Fluctuations n0" << std::setw(dist) << "Energy" <<  std::setw(dist) <<
 	"Particle count" << std::setw(dist) << "Momentum" << '\n';
 	output_file.close();
-
 }
 
 void BGEvolution::icInit()
@@ -443,10 +462,9 @@ void BGEvolution::printParameters()
 	std::cerr << "Step size: " << h << '\n';
 	std::cerr << "Batch size: " << batchSize << '\n';
 	std::cerr << "Batch count: " << batchCount << '\n' << '\n';
-	std::cerr << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0" << std::setw(dist) <<
-	"Fluctuations n0" << std::setw(dist) << "Energy" <<  std::setw(dist) <<
-	"Particle count" << std::setw(dist) << "Momentum" << '\n';
-
+	std::cerr << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0"
+		<< std::setw(dist) << "Fluctuations n0" << std::setw(dist) << "Energy"
+		<<  std::setw(dist) << "Particle count" << std::setw(dist) << "Momentum" << '\n';
 }
 
 void BGEvolution::saveToFile(const double avg, const double fluc, const int_fast32_t i)
@@ -455,7 +473,7 @@ void BGEvolution::saveToFile(const double avg, const double fluc, const int_fast
 	output_file.open(output,std::ios::app|std::ios::out);
 
 	output_file << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(10) << avg << std::setw(dist) << fluc
-	<< std::setw(dist) << kineticEnergy()+potentialEnergy() <<  std::setw(dist) << nAll() << std::setw(dist) << momentum() << '\n';
+		<< std::setw(dist) << kineticEnergy()+potentialEnergy() <<  std::setw(dist) << nAll() << std::setw(dist) << momentum() << '\n';
 	output_file.close();
 }
 

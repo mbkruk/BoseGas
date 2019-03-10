@@ -24,6 +24,7 @@ int main(int argc, const char *argv[])
 	params.gamma = 1;
 	params.batchSize = 10000;
 	params.batchCount = 1;
+	params.threadCount = 0;
 
 	std::vector<double> avgs, flucs;
 
@@ -57,6 +58,14 @@ int main(int argc, const char *argv[])
 		[&](const char *arg[])
 		{
 			params.batchCount = std::stoul(arg[1]);
+			return 0;
+		}
+	);
+
+	po.addOption("-t","--thread-count <count>","set extra thread count",2,
+		[&](const char *arg[])
+		{
+			params.threadCount = std::stoul(arg[1]);
 			return 0;
 		}
 	);
@@ -131,7 +140,6 @@ int main(int argc, const char *argv[])
 	std::cin >> params.gamma;
 	std::cin >> params.interactionType;
 
-
 	if (params.interactionType=="gauss" || params.interactionType=="ddi")
 	{
 		std::cin >> params.interactionRange;
@@ -152,16 +160,16 @@ int main(int argc, const char *argv[])
 	evolution.create(params);
 	evolution.stdinInit();
 	evolution.printParameters();
-	
+
 	for (int_fast32_t i=0;i<params.batchCount;++i)
 	{
-		evolution.icInit();	
-		evolution.evolve(params.batchSize);
+		evolution.icInit();
+		evolution.evolve();
 		avgs.push_back(evolution.averageNZero());
 		flucs.push_back(evolution.fluctuationsNZero(avgs[i]));
-		std::cerr  << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(16) << avgs[i] << std::setw(dist) << 
-		flucs[i] << std::setw(dist) << evolution.kineticEnergy()+evolution.potentialEnergy() <<  std::setw(dist) <<
-		evolution.nAll() << std::setw(dist) << evolution.momentum() << '\n';
+		std::cerr  << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(16) << avgs[i] << std::setw(dist)
+			<< flucs[i] << std::setw(dist) << evolution.kineticEnergy()+evolution.potentialEnergy() <<  std::setw(dist)
+			<< evolution.nAll() << std::setw(dist) << evolution.momentum() << '\n';
 		evolution.saveToFile(avgs[i],flucs[i],i);
 		if (i==params.batchCount-1)
 			evolution.getLastPoint();

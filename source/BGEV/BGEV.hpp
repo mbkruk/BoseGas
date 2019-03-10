@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 #include <immintrin.h>
+#include <thread>
+
+#include "../BGCommon/Barrier.hpp"
 
 struct BGEVParameters
 {
@@ -15,6 +18,7 @@ struct BGEVParameters
 	std::string output;
 	std::string interactionType;
 	std::vector<double> reducedCoefficients;
+	uint_fast32_t threadCount;
 };
 
 class BGEvolution
@@ -39,7 +43,7 @@ private:
 	std::vector<std::vector<int_fast32_t> > indices;
 
 	//initial conditions
-	__m256d *initial_conditions; 
+	__m256d *initial_conditions;
 	__m256d *baabtab;
 
 	// RK5 parameters
@@ -60,11 +64,23 @@ private:
 	__m256d *k1, *k2, *k3, *k4, *k5, *k6;
 	__m256d *yk1, *yk2, *yk3, *yk4, *yk5;
 
+	uint_fast32_t threadCount;
+	std::thread *pThreads;
+
+	Barrier barrier;
+
+	void thread(const uint32_t threadIndex);
+
 	void derivative(const __m256d *r);
 	void derivativeLong(const __m256d *r);
 
+	void derivative0(const __m256d *r);
+	void derivative1(const __m256d *r, const uint_fast32_t i);
+
 public:
-	void evolve(uint_fast32_t steps);
+
+	void evolve();
+	void evolve2();
 
 	void create(const BGEVParameters &params);
 	void destroy();
