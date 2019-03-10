@@ -5,7 +5,7 @@ DEBUG=
 GPP_VERSION=$(shell g++ -dumpversion)
 STD=$(shell if [ "$(GPP_VERSION)" \> "5" ]; then echo "-std=c++11"; else echo "-std=c++0x"; fi)
 CFLAGS=-mavx -O3
-LDFLAGS=$(shell if [ "$(GPP_VERSION)" \> "5" ]; then echo "-flto"; else echo "-lrt"; fi)
+LDFLAGS=-lpthread $(shell if [ "$(GPP_VERSION)" \> "5" ]; then echo "-flto"; else echo "-lrt"; fi)
 
 .PHONY: all
 all: $(ALL)

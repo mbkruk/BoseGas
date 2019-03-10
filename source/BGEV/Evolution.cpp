@@ -368,8 +368,10 @@ void BGEvolution::create(const BGEVParameters &params)
 	{
 		pThreads = new std::thread[threadCount];
 
+		barrier.setThreadCount(threadCount+1);
+
 		for (uint32_t i=0;i<threadCount;++i)
-			pThreads[i] = std::thread(thread,this,i);
+			pThreads[i] = std::thread(&BGEvolution::thread,this,i+1);
 	}
 	else
 		pThreads = nullptr;
@@ -437,9 +439,9 @@ void BGEvolution::stdinInit()
 	output_file << "Step size: " << h << '\n';
 	output_file << "Batch size: " << batchSize << '\n';
 	output_file << "Batch count: " << batchCount << '\n';
-	output_file << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0" << std::setw(dist) <<
-	"Fluctuations n0" << std::setw(dist) << "Energy" <<  std::setw(dist) <<
-	"Particle count" << std::setw(dist) << "Momentum" << '\n';
+	output_file << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0"
+		<< std::setw(dist) << "Fluctuations n0" << std::setw(dist) << "Energy"
+		<<  std::setw(dist) << "Particle count" << std::setw(dist) << "Momentum" << '\n';
 	output_file.close();
 }
 
@@ -490,7 +492,7 @@ void BGEvolution::getLastPoint()
 			output_file << (*(pCurrent+i))[0] << '\n';
 	}
 
-		for (int_fast32_t i=-nMax;i<=nMax;++i)
+	for (int_fast32_t i=-nMax;i<=nMax;++i)
 	{
 		if (i<0)
 			output_file << (*(pCurrent+abs(i)))[3] << '\n';

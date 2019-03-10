@@ -69,13 +69,13 @@ private:
 
 	Barrier barrier;
 
-	void thread(const uint32_t threadIndex);
+	void thread(const int_fast32_t threadIndex);
 
 	void derivative(const __m256d *r);
 	void derivativeLong(const __m256d *r);
 
 	void derivative0(const __m256d *r);
-	void derivative1(const __m256d *r, const uint_fast32_t i);
+	void derivative1(const __m256d *r, const int_fast32_t i);
 
 public:
 

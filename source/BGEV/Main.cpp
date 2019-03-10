@@ -164,7 +164,10 @@ int main(int argc, const char *argv[])
 	for (int_fast32_t i=0;i<params.batchCount;++i)
 	{
 		evolution.icInit();
-		evolution.evolve();
+		if (params.threadCount>0)
+			evolution.evolve2();
+		else
+			evolution.evolve();
 		avgs.push_back(evolution.averageNZero());
 		flucs.push_back(evolution.fluctuationsNZero(avgs[i]));
 		std::cerr  << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(16) << avgs[i] << std::setw(dist)
