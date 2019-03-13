@@ -469,21 +469,59 @@ void BGEvolution::printParameters()
 		<<  std::setw(dist) << "Particle count" << std::setw(dist) << "Momentum" << '\n';
 }
 
-void BGEvolution::saveToFile(const double avg, const double fluc, const int_fast32_t i)
+void BGEvolution::saveToFile(const int_fast32_t i)
 {
 	std::fstream output_file;
 	output_file.open(output,std::ios::app|std::ios::out);
 
-	output_file << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(10) << avg << std::setw(dist) << fluc
+	output_file << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(16) << avgs.back() << std::setw(dist) << flucs.back()
 		<< std::setw(dist) << kineticEnergy()+potentialEnergy() <<  std::setw(dist) << nAll() << std::setw(dist) << momentum() << '\n';
 	output_file.close();
 }
 
-void BGEvolution::getLastPoint()
+void BGEvolution::lastBatch()
 {
+	//We have to save last point of evolution (to be able to continue evolving if we want to) and calculate final averages.
+	double finalavg, finalfluc;
+	double suma = 0;
+	double sumf = 0;
+	for (int_fast32_t i=0;i<batchCount;++i)
+	{
+		suma += avgs[i];
+		sumf += flucs[i]*flucs[i]+avgs[i]*avgs[i];
+	}
+
+	finalavg = suma/batchCount;
+	finalfluc = sqrt(sumf/batchCount-finalavg*finalavg);
+
+	std::cerr << '\n' << "Final average n0: "  << std::setprecision(16) << finalavg << '\n';
+	std::cerr << "Final fluctuations n0: " << std::setprecision(16) << finalfluc << '\n';
+
 	std::fstream output_file;
 	output_file.open(output,std::ios::app|std::ios::out);
-	output_file << '\n' << "Last point:" << '\n';
+
+	output_file << '\n' << "Final average n0: "  << std::setprecision(16) << finalavg << '\n';
+	output_file << "Final fluctuations n0: " << std::setprecision(16) << finalfluc << '\n';
+
+	output_file << '\n' << "Averages:" << '\n';
+	for (int_fast32_t i=0;i<batchCount;++i)
+		output_file << avgs[i] << '\n';
+
+	output_file << '\n' << "Fluctuations:" << '\n';
+	for (int_fast32_t i=0;i<batchCount;++i)
+		output_file << flucs[i] << '\n';
+
+	output_file << '\n' << "Last point and parameters for further simulation:" << '\n';
+	output_file << particleCount << '\n';
+	output_file << nMax << '\n';
+	output_file << gamma << '\n';
+	output_file << interactionType << '\n';
+
+	if (interactionType=="gauss" || interactionType=="ddi")
+		for (int_fast32_t i=0;i<=2*nMax;++i)
+			output_file << '\n' << reducedCoefficients[i] << '\n';
+
+	output_file << '\n';
 	for (int_fast32_t i=-nMax;i<=nMax;++i)
 	{
 		if (i<0)
@@ -500,5 +538,8 @@ void BGEvolution::getLastPoint()
 			output_file << (*(pCurrent+i))[1] << '\n';
 	}
 
+	output_file << '\n' << "Final quantities:" << '\n';
+	output_file << std::setprecision(16) << finalavg << '\n';
+	output_file << std::setprecision(16) << finalfluc << '\n';
 	output_file.close();
 }

@@ -26,8 +26,6 @@ int main(int argc, const char *argv[])
 	params.batchCount = 1;
 	params.threadCount = 0;
 
-	std::vector<double> avgs, flucs;
-
 	po.addOption("-h","--help","produce help message",1,[&](const char *[]){help=true;return 0;});
 
 	po.addOption("-o","--output <file>","set output file",2,
@@ -168,14 +166,13 @@ int main(int argc, const char *argv[])
 			evolution.evolve2();
 		else
 			evolution.evolve();
-		avgs.push_back(evolution.averageNZero());
-		flucs.push_back(evolution.fluctuationsNZero(avgs[i]));
-		std::cerr  << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(16) << avgs[i] << std::setw(dist)
-			<< flucs[i] << std::setw(dist) << evolution.kineticEnergy()+evolution.potentialEnergy() <<  std::setw(dist)
+		evolution.calcAverages();
+		std::cerr  << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(16) << evolution.avgs[i] << std::setw(dist)
+			<< evolution.flucs[i] << std::setw(dist) << evolution.kineticEnergy()+evolution.potentialEnergy() <<  std::setw(dist)
 			<< evolution.nAll() << std::setw(dist) << evolution.momentum() << '\n';
-		evolution.saveToFile(avgs[i],flucs[i],i);
+		evolution.saveToFile(i);
 		if (i==params.batchCount-1)
-			evolution.getLastPoint();
+			evolution.lastBatch();
 	}
 	evolution.destroy();
 
