@@ -84,6 +84,15 @@ int main(int argc, const char *argv[])
 		}
 	);
 
+	po.addOption("-S","--batch-size <count>","set batch size",2,
+		[&](const char *arg[])
+		{
+			params.batchSize = std::stol(arg[1]);
+			return 0;
+		}
+	);
+
+
 	po.addOption("-g","--gamma <number>","interaction strength",2,
 		[&](const char *arg[])
 		{

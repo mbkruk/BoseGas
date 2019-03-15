@@ -22,13 +22,13 @@ struct Info
 	std::vector<double> pAccept;
 	double pAcceptMean, pAcceptStdDev;
 	std::vector<double> n0;
-	double n0Mean, n0StdDev;
+	double n0Mean, n0StdDev, n0MeanStdDev;
 	std::vector<double> asymmetry;
 	double asymmetryMean, asymmetryStdDev;
 	std::vector<double> energy;
-	double energyMean, energyStdDev;
+	double energyMean, energyStdDev, energyMeanStdDev;
 	std::vector<double> momentum;
-	double momentumMean, momentumStdDev;
+	double momentumMean, momentumStdDev, momentumMeanStdDev;
 
 	void append(double accepted, double N0, double A, double E, double P)
 	{
@@ -43,9 +43,12 @@ struct Info
 	{
 		meanStdDev(pAccept,&pAcceptMean,&pAcceptStdDev);
 		meanStdDev(n0,&n0Mean,&n0StdDev);
+		n0MeanStdDev = n0StdDev/sqrt(n0.size()-1);
 		meanStdDev(asymmetry,&asymmetryMean,&asymmetryStdDev);
 		meanStdDev(energy,&energyMean,&energyStdDev);
+		energyMeanStdDev = energyStdDev/sqrt(energy.size()-1);
 		meanStdDev(momentum,&momentumMean,&momentumStdDev);
+		momentumMeanStdDev = momentumStdDev/sqrt(momentum.size()-1);
 	}
 
 	void clear()
@@ -61,10 +64,10 @@ struct Info
 	{
 		os << std::setw(8) << "batch"
 			<< " " << std::setw(15) << "P accept"
-			<< " " << std::setw(15) << "n0 mean" << std::setw(15) << "n0 std dev"
-			<< " " << std::setw(15) << "asym mean" << std::setw(15) << "asym std dev"
-			<< " " << std::setw(15) << "E mean" << std::setw(15) << "E std dev"
-			<< " " << std::setw(15) << "P mean" << std::setw(15) << "P std dev"
+			<< " " << std::setw(15) << "n0 mean" << std::setw(15) << "+/-" << std::setw(15) << "n0 std dev"
+			//<< " " << std::setw(15) << "asym mean" << std::setw(15) << "asym std dev"
+			<< " " << std::setw(15) << "E mean" << std::setw(15) << "+/-" << std::setw(15) << "E std dev"
+			<< " " << std::setw(15) << "P mean" << std::setw(15) << "+/-" << std::setw(15) << "P std dev"
 			<< std::endl;
 	}
 
@@ -72,10 +75,10 @@ struct Info
 	{
 		os << std::setw(8) << batch
 			<< " " << std::setw(15) << pAcceptMean
-			<< " " << std::setw(15) << n0Mean << std::setw(15) << n0StdDev
-			<< " " << std::setw(15) << asymmetryMean << std::setw(15) << asymmetryStdDev
-			<< " " << std::setw(15) << energyMean << std::setw(15) << energyStdDev
-			<< " " << std::setw(15) << momentumMean << std::setw(15) << momentumStdDev
+			<< " " << std::setw(15) << n0Mean << std::setw(15) << n0MeanStdDev << std::setw(15) << n0StdDev
+			//<< " " << std::setw(15) << asymmetryMean << std::setw(15) << asymmetryStdDev
+			<< " " << std::setw(15) << energyMean << std::setw(15) << energyMeanStdDev << std::setw(15) << energyStdDev
+			<< " " << std::setw(15) << momentumMean << std::setw(15) << momentumMeanStdDev << std::setw(15) << momentumStdDev
 			<< std::endl;
 	}
 };
@@ -121,8 +124,11 @@ int32_t bgSimulationCF(BGMCParameters &params)
 
 	BGMC::Energy energy;
 
-	for(uint32_t batch=0;batch<params.batchCount;++batch)
+	totalInfo.clear();
+
+	for (uint32_t batch=0;batch<params.batchCount;++batch)
 	{
+		batchInfo.clear();
 		for (uint32_t i=0;i<params.batchSize;++i)
 		{
 			double a = cfmc.steps(random,1);
@@ -130,7 +136,7 @@ int32_t bgSimulationCF(BGMCParameters &params)
 			double n0 = cfmc.groundStateOccupation();
 			double p = cfmc.momentum();
 			batchInfo.append(a,n0,0.0,energy.totalEnergy,p);
-			if((i+1)%params.skip==0)
+			if ((i+1)%params.skip==0)
 			{
 				totalInfo.append(a,n0,0.0,energy.totalEnergy,p);
 				alphas.push_back({energy.totalEnergy,p,0.0,0.0,0.0,cfmc.alphaCopy()});
@@ -143,7 +149,7 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	totalInfo.process();
 	totalInfo.print(std::cout,"total");
 
-	for(auto &ar : alphas)
+	for (auto &ar : alphas)
 	{
 		ar.Ed = (ar.E-totalInfo.energyMean)/totalInfo.energyStdDev;
 		ar.Pd = ar.P/totalInfo.momentumStdDev;
@@ -160,10 +166,10 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	output_file << params.gamma << '\n';
 	output_file << params.interactionType << '\n' << '\n';
 
-	for(int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
+	for (int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
 		output_file << std::real(alphas[0].alpha[i]) << '\n';
 
-	for(int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
+	for (int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
 		output_file << std::imag(alphas[0].alpha[i]) << '\n';
 
 	output_file.close();
