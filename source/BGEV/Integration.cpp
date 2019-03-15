@@ -2,6 +2,7 @@
 #include <immintrin.h>
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 #include "BGEV.hpp"
 
@@ -71,3 +72,8 @@ double BGEvolution::fluctuationsNZero(const double n0)
 	return sqrt(aveN0sq-n0*n0);
 }
 
+void BGEvolution::calcAverages()
+{
+	avgs.push_back(averageNZero());
+	flucs.push_back(fluctuationsNZero(avgs.back()));
+}

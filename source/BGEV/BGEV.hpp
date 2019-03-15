@@ -79,6 +79,8 @@ private:
 
 public:
 
+	std::vector<double> avgs, flucs;
+
 	void evolve();
 	void evolve2();
 
@@ -88,8 +90,9 @@ public:
 	void icInit();
 	void stdinInit();
 	void printParameters();
-	void saveToFile(const double avg, const double fluc, const int_fast32_t i);
-	void getLastPoint();
+	void saveToFile(const int_fast32_t i);
+	void calcAverages();
+	void lastBatch();
 
 	double averageNZero();
 	double fluctuationsNZero(const double n0);
