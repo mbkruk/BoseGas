@@ -47,7 +47,7 @@ int main(int argc, const char *argv[])
 	po.addOption("-BS","--Batch-size <count>","set batch size",2,
 		[&](const char *arg[])
 		{
-			params.batchCount = std::stoul(arg[1]);
+			params.batchSize = std::stoul(arg[1]);
 			return 0;
 		}
 	);
