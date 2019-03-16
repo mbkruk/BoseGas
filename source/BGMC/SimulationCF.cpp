@@ -172,6 +172,11 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	for (int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
 		output_file << std::imag(alphas[0].alpha[i]) << '\n';
 
+	output_file << '\n' << "Final quantities:" << '\n';
+	output_file << totalInfo.n0Mean << '\n';
+	output_file << totalInfo.n0StdDev << '\n';
+	output_file <<totalInfo.energyMean;
+
 	output_file.close();
 
 	cfmc.release();
