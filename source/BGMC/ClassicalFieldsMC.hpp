@@ -86,9 +86,19 @@ private:
 
 public:
 
+	inline double getInitialDetla() const
+	{
+		return 0.076*sqrt(N)*sqrt(2*nMax+1)/sqrt(1.0+N*gamma);
+	}
+
 	inline double getDelta() const
 	{
 		return delta;
+	}
+
+	inline double getRelativeDelta() const
+	{
+		return delta/getInitialDetla();
 	}
 
 	inline const Alpha& currentAlpha()

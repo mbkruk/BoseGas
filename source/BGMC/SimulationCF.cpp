@@ -143,7 +143,10 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	}
 	while (std::abs(batchInfo.momentumMean)/batchInfo.momentumMeanStdDev>=3.0);
 
-	while (std::abs(batchInfo.pAcceptMean-0.5)/batchInfo.pAcceptMeanStdDev>=4.0)
+	while (
+		std::abs(batchInfo.pAcceptMean-0.5)/batchInfo.pAcceptMeanStdDev>=4.0
+		|| std::abs(batchInfo.momentumMean)/batchInfo.momentumMeanStdDev>=3.0
+		)
 	{
 		batchInfo.clear();
 		for (uint32_t i=0;i<params.batchSize;++i)

@@ -96,7 +96,7 @@ void ClassicalFieldsMC::generate(std::mt19937 &random)
 	}
 	alpha.normalize(N);
 	alpha.update(pInteraction);
-	delta = 0.05*sqrt(N);
+	delta = getInitialDetla();
 }
 
 void ClassicalFieldsMC::initialize(const BGMCParameters &params)
