@@ -20,7 +20,7 @@ struct AlphaRecord
 struct Info
 {
 	std::vector<double> pAccept;
-	double pAcceptMean, pAcceptStdDev;
+	double pAcceptMean, pAcceptStdDev, pAcceptMeanStdDev;
 	std::vector<double> n0;
 	double n0Mean, n0StdDev, n0MeanStdDev;
 	std::vector<double> asymmetry;
@@ -42,6 +42,7 @@ struct Info
 	void process()
 	{
 		meanStdDev(pAccept,&pAcceptMean,&pAcceptStdDev);
+		pAcceptMeanStdDev = pAcceptStdDev/sqrt(pAccept.size()-1);
 		meanStdDev(n0,&n0Mean,&n0StdDev);
 		n0MeanStdDev = n0StdDev/sqrt(n0.size()-1);
 		meanStdDev(asymmetry,&asymmetryMean,&asymmetryStdDev);
@@ -118,7 +119,6 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	random.seed(params.seed);
 
 	cfmc.initialize(params);
-	cfmc.generate(random);
 
 	Info::printHead(std::cout);
 
@@ -126,7 +126,39 @@ int32_t bgSimulationCF(BGMCParameters &params)
 
 	totalInfo.clear();
 
-	for (uint32_t batch=0;batch<params.batchCount;++batch)
+	do
+	{
+		cfmc.generate(random);
+		batchInfo.clear();
+		for (uint32_t i=0;i<params.batchSize;++i)
+		{
+			double a = cfmc.steps(random,1);
+			cfmc.energy(energy);
+			double n0 = cfmc.groundStateOccupation();
+			double p = cfmc.momentum();
+			batchInfo.append(a,n0,0.0,energy.totalEnergy,p);
+		}
+		batchInfo.process();
+		batchInfo.print(std::cout,"init");
+	}
+	while (std::abs(batchInfo.momentumMean)/batchInfo.momentumMeanStdDev>=3.0);
+
+	while (std::abs(batchInfo.pAcceptMean-0.5)/batchInfo.pAcceptMeanStdDev>=4.0)
+	{
+		batchInfo.clear();
+		for (uint32_t i=0;i<params.batchSize;++i)
+		{
+			double a = cfmc.steps(random,1);
+			cfmc.energy(energy);
+			double n0 = cfmc.groundStateOccupation();
+			double p = cfmc.momentum();
+			batchInfo.append(a,n0,0.0,energy.totalEnergy,p);
+		}
+		batchInfo.process();
+		batchInfo.print(std::cout,"accept");
+	}
+
+	for (uint32_t batch=1;batch<params.batchCount;++batch)
 	{
 		batchInfo.clear();
 		for (uint32_t i=0;i<params.batchSize;++i)
@@ -172,10 +204,9 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	for (int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
 		output_file << std::imag(alphas[0].alpha[i]) << '\n';
 
-	output_file << '\n' << "Final quantities:" << '\n';
-	output_file << totalInfo.n0Mean << '\n';
-	output_file << totalInfo.n0StdDev << '\n';
-	output_file <<totalInfo.energyMean;
+	output_file << '\n';
+	Info::printHead(output_file);
+	totalInfo.print(output_file,"total");
 
 	output_file.close();
 

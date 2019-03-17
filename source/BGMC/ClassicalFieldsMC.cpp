@@ -81,9 +81,15 @@ void ClassicalFieldsMC::generate(std::mt19937 &random)
 	std::uniform_real_distribution<double> d2pi(0.0,2.0*M_PI);
 	std::vector<std::complex<double> > &v = alpha.alpha;
 	double length, angle;
-	for (int32_t i=0;i<nMax;++i)
+	for (int32_t i=0;i<=nMax;++i)
 	{
 		length = d1(random);
+		v[i].real(length);
+		v[2*nMax-i].real(length);
+	}
+	for (int32_t i=0;i<2*nMax+1;++i)
+	{
+		length = v[i].real();
 		angle = d2pi(random);
 		v[i].real(length*cos(angle));
 		v[i].imag(length*sin(angle));
