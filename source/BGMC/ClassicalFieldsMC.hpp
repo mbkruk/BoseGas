@@ -88,7 +88,7 @@ public:
 
 	inline double getInitialDetla() const
 	{
-		return 0.076*sqrt(N)*sqrt(2*nMax+1)/sqrt(1.0+N*gamma);
+		return 0.76*sqrt(2*nMax+1)/sqrt(1.0+N*gamma);
 	}
 
 	inline double getDelta() const
