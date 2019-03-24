@@ -66,11 +66,11 @@ int32_t ClassicalFieldsMC::steps(std::mt19937 &random, uint32_t count)
 		if (r<p)
 		{
 			std::swap(alpha,alpha0);
-			delta *= 1.0001;
+			delta *= deltaDelta;
 			++accepted;
 		}
 		else
-			delta /= 1.0001;
+			delta /= deltaDelta;
 	}
 	return accepted;
 }
@@ -104,7 +104,9 @@ void ClassicalFieldsMC::initialize(const BGMCParameters &params)
 	N = params.particleCount;
 	beta = params.beta;
 	gamma = params.gamma;
+	baseNMax = params.nMax;
 	nMax = params.nMax+params.extraModePairs;
+	deltaDelta = pow(10.0,4.0/params.batchSize);
 
 	alpha.alpha.resize(2*nMax+1);
 	alpha0.alpha.resize(2*nMax+1);

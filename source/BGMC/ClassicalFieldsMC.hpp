@@ -67,7 +67,9 @@ private:
 	double gamma;
 
 	double delta;
+	double deltaDelta;
 
+	int32_t baseNMax;
 	int32_t nMax;
 
 	struct Alpha : public Energy
@@ -88,7 +90,7 @@ public:
 
 	inline double getInitialDetla() const
 	{
-		return 0.76*sqrt(2*nMax+1)/sqrt(1.0+N*gamma);
+		return 0.76*sqrt(2*baseNMax+1)/(double)(1*(nMax-baseNMax)+1)/sqrt(1.0+std::abs(N*gamma));
 	}
 
 	inline double getDelta() const
