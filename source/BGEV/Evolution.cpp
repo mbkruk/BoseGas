@@ -151,7 +151,7 @@ void BGEvolution::derivativeLong(const __m256d *r)
 void BGEvolution::evolve()
 {
 	uint_fast32_t steps = batchSize;
-	if (interactionType=="gauss" || interactionType=="ddi")
+	if (interactionType=="custom")
 	{
 
 		while (steps--)
@@ -281,14 +281,13 @@ void BGEvolution::create(const BGEVParameters &params)
 	stride = nMax+1;
 	gamma = params.gamma;
 	output = params.output;
-	interactionRange = params.interactionRange;
 	interactionType = params.interactionType;
 
 	for (int_fast32_t i=0;i<params.reducedCoefficients.size();++i)
 		reducedCoefficients.push_back(params.reducedCoefficients[i]);
 
 	std::vector<int_fast32_t> A;
-	if (interactionType=="gauss"||interactionType=="ddi")
+	if (interactionType=="custom")
 	{
 		indicesCount = (int_fast32_t*)aligned_alloc(sizeof(int_fast32_t),(2*nMax+2)*sizeof(int_fast32_t));
 		indicesCount[0] = 0;
@@ -434,8 +433,6 @@ void BGEvolution::stdinInit()
 	output_file << "Nmax: " << nMax << '\n';
 	output_file << "Gamma: " << gamma << '\n';
 	output_file << "Interaction type: " << interactionType << '\n';
-	if (interactionType=="gauss" || interactionType=="ddi")
-		output_file << "Interaction range: " << interactionRange << '\n';
 	output_file << "Step size: " << h << '\n';
 	output_file << "Batch size: " << batchSize << '\n';
 	output_file << "Batch count: " << batchCount << '\n';
@@ -459,8 +456,6 @@ void BGEvolution::printParameters()
 	std::cerr << "Nmax: " << nMax << '\n';
 	std::cerr << "Gamma: " << gamma << '\n';
 	std::cerr << "Interaction type: " << interactionType << '\n';
-	if (interactionType=="gauss" || interactionType=="ddi")
-		std::cerr << "Interaction range: " << interactionRange << '\n';
 	std::cerr << "Step size: " << h << '\n';
 	std::cerr << "Batch size: " << batchSize << '\n';
 	std::cerr << "Batch count: " << batchCount << '\n' << '\n';
@@ -483,8 +478,8 @@ void BGEvolution::lastBatch()
 {
 	//We have to save last point of evolution (to be able to continue evolving if we want to) and calculate final averages.
 	double finalavg, finalfluc;
-	double suma = 0;
-	double sumf = 0;
+	double suma = 0.0;
+	double sumf = 0.0;
 	for (int_fast32_t i=0;i<batchCount;++i)
 	{
 		suma += avgs[i];
@@ -517,7 +512,7 @@ void BGEvolution::lastBatch()
 	output_file << gamma << '\n';
 	output_file << interactionType << '\n';
 
-	if (interactionType=="gauss" || interactionType=="ddi")
+	if (interactionType=="custom")
 		for (int_fast32_t i=0;i<=2*nMax;++i)
 			output_file << '\n' << reducedCoefficients[i] << '\n';
 

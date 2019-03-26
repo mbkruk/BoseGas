@@ -13,7 +13,7 @@ struct BGEVParameters
 {
 	uint_fast32_t particleCount;
 	int_fast32_t nMax;
-	double gamma, h, interactionRange;
+	double gamma, h;
 	uint_fast32_t batchSize, batchCount;
 	std::string output;
 	std::string interactionType;
@@ -32,7 +32,6 @@ private:
 	size_t stride;
 	double gamma;
 	double h;
-	double interactionRange;
 	std::string output;
 	std::string interactionType;
 

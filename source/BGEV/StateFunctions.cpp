@@ -45,7 +45,7 @@ int sgn(int x)
 double BGEvolution::potentialEnergy()
 {
 	double u = 0.0;
-	if (interactionType=="gauss"||interactionType=="ddi")
+	if (interactionType=="custom")
 	{
 		for (int_fast32_t i=-nMax;i<=nMax;++i)
 		for (int_fast32_t j=-nMax;j<=nMax;++j)

@@ -138,9 +138,8 @@ int main(int argc, const char *argv[])
 	std::cin >> params.gamma;
 	std::cin >> params.interactionType;
 
-	if (params.interactionType=="gauss" || params.interactionType=="ddi")
+	if (params.interactionType=="custom")
 	{
-		std::cin >> params.interactionRange;
 		double x;
 		for (int_fast32_t i=0;i<=2*params.nMax;++i)
 		{
