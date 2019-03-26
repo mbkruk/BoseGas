@@ -201,10 +201,12 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	output_file << params.gamma << '\n';
 	output_file << params.interactionType << '\n' << '\n';
 
-	for (int_fast32_t i=0;i<2*(params.nMax+params.extraModePairs)+1;++i)
-		output_file << params.interactionCoefficients[i] << '\n';
-
-	output_file << '\n';
+	if (params.interactionType=="custom")
+	{
+		for (int_fast32_t i=0;i<2*(params.nMax+params.extraModePairs)+1;++i)
+			output_file << params.interactionCoefficients[i] << '\n';
+		output_file << '\n';
+	}
 
 	for (int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
 		output_file << std::real(alphas[0].alpha[i]) << '\n';
