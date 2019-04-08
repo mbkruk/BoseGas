@@ -196,28 +196,40 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	std::fstream output_file;
 	output_file.open(params.output,std::ios::out);
 
-	output_file << params.particleCount << '\n';
-	output_file << params.nMax+params.extraModePairs << '\n';
-	output_file << params.gamma << '\n';
-	output_file << params.interactionType << '\n' << '\n';
-
-	if (params.interactionType=="custom")
+	if (params.outputStyle=="modified")
 	{
-		for (int_fast32_t i=0;i<2*(params.nMax+params.extraModePairs)+1;++i)
-			output_file << params.interactionCoefficients[i] << '\n';
-		output_file << '\n';
+		for (int_fast32_t i=0; i<alphas.size();++i)
+		{	
+			for (int_fast32_t j=0; j<2*(params.nMax+params.extraModePairs)+1;++j)
+				output_file << std::real(alphas[i].alpha[j]) << " " << std::imag(alphas[0].alpha[j]) << " "; 
+			output_file << '\n';
+		}
 	}
+	else
+	{
+		output_file << params.particleCount << '\n';
+		output_file << params.nMax+params.extraModePairs << '\n';
+		output_file << params.gamma << '\n';
+		output_file << params.interactionType << '\n' << '\n';
 
-	for (int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
-		output_file << std::real(alphas[0].alpha[i]) << '\n';
+		if (params.interactionType=="custom")
+		{
+			for (int_fast32_t i=0;i<2*(params.nMax+params.extraModePairs)+1;++i)
+				output_file << params.interactionCoefficients[i] << '\n';
+			output_file << '\n';
+		}
 
-	for (int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
-		output_file << std::imag(alphas[0].alpha[i]) << '\n';
+		for (int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
+			output_file << std::real(alphas[0].alpha[i]) << '\n';
 
-	output_file << '\n';
-	Info::printHead(output_file);
-	totalInfo.print(output_file,"total");
+		for (int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
+			output_file << std::imag(alphas[0].alpha[i]) << '\n';
 
+		output_file << '\n';
+		Info::printHead(output_file);
+		totalInfo.print(output_file,"total");
+	}
+	
 	output_file.close();
 
 	cfmc.release();

@@ -19,7 +19,7 @@ struct BGMCParameters
 	uint32_t skip;
 	std::string interactionType;
 	std::vector<double> interactionCoefficients;
-	std::string output;
+	std::string output, outputStyle;
 };
 
 class BGMC
