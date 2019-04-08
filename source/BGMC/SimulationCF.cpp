@@ -200,7 +200,11 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	output_file << params.nMax+params.extraModePairs << '\n';
 	output_file << params.gamma << '\n';
 	output_file << params.interactionType << '\n';
-	output_file << alphas.size() << '\n' << '\n';
+	
+	if (params.outputStyle=="modified")
+		output_file << alphas.size() << '\n' << '\n';
+	else
+		output_file << "1" << '\n' << '\n';
 
 	if (params.interactionType=="custom")
 		{
