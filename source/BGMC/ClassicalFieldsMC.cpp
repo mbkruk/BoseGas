@@ -31,6 +31,13 @@ double ClassicalFieldsMC::groundStateOccupation()
 	return std::norm(alpha.alpha[nMax]);
 }
 
+void ClassicalFieldsMC::getOccupation(std::vector<double> &occupation)
+{
+	occupation.resize(alpha.alpha.size());
+	for(uint_fast32_t i=0;i<occupation.size();++i)
+		occupation[i] = std::norm(alpha.alpha[i]);
+}
+
 int32_t ClassicalFieldsMC::steps(std::mt19937 &random, uint32_t count)
 {
 	std::uniform_real_distribution<double> d1(0.0,1.0);

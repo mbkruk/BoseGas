@@ -131,6 +131,8 @@ public:
 	uint32_t excitedStatesOccupation() override;
 	double groundStateOccupation();
 
+	void getOccupation(std::vector<double> &occupation);
+
 	int32_t steps(std::mt19937 &random, uint32_t count) override;
 
 	void generate(std::mt19937 &random) override;
