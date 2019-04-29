@@ -11,7 +11,7 @@
 
 struct BGEVParameters
 {
-	uint_fast32_t particleCount;
+	uint_fast32_t particleCount, alphaCount;
 	int_fast32_t nMax;
 	double gamma, h;
 	uint_fast32_t batchSize, batchCount;

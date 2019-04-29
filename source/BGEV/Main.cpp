@@ -137,6 +137,7 @@ int main(int argc, const char *argv[])
 	std::cin >> params.nMax;
 	std::cin >> params.gamma;
 	std::cin >> params.interactionType;
+	std::cin >> params.alphaCount;
 
 	if (params.interactionType=="custom")
 	{
