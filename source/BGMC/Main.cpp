@@ -132,7 +132,7 @@ int main(int argc, const char *argv[])
 		}
 	);
 
-	po.addOption("-mo","--modified output","set modified output",1,
+	po.addOption("-mo","--modified-output","set modified output (for random walk and local fluctuations)",1,
 		[&](const char *[])
 		{
 			params.outputStyle = "modified";
