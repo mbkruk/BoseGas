@@ -83,5 +83,5 @@ double BGEvolution::potentialEnergy()
 		return gamma*u;
 	}
 
-
+	return 0.0;
 }
