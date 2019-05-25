@@ -239,13 +239,6 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	else
 		output_file << "1" << '\n' << '\n';
 
-	if (params.interactionType=="custom")
-	{
-		for (int_fast32_t i=0;i<2*(params.nMax+params.extraModePairs)+1;++i)
-			output_file << params.interactionCoefficients[i] << '\n';
-		output_file << '\n';
-	}
-
 	if (params.outputStyle=="modified")
 	{
 		for (int_fast32_t i=0; i<alphas.size();++i)
@@ -263,6 +256,13 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	}
 	else
 	{
+		if (params.interactionType=="custom")
+		{
+			for (int_fast32_t i=0;i<2*(params.nMax+params.extraModePairs)+1;++i)
+				output_file << params.interactionCoefficients[i] << '\n';
+			output_file << '\n';
+		}
+		
 		for (int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
 			output_file << std::real(alphas[0].alpha[i]) << '\n';
 
