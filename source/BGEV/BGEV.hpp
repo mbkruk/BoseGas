@@ -25,7 +25,7 @@ class BGEvolution
 {
 private:
 
-	uint_fast32_t particleCount;
+	uint_fast32_t particleCount, alphaCount;
 	int_fast32_t nMax;
 	uint_fast32_t batchSize;
 	uint_fast32_t batchCount;
@@ -101,6 +101,7 @@ public:
 	double momentum();
 	double kineticEnergy();
 	double potentialEnergy();
+	double constantx();
 };
 
 #endif

@@ -278,6 +278,7 @@ void BGEvolution::create(const BGEVParameters &params)
 	nMax = params.nMax;
 	batchSize = params.batchSize;
 	batchCount = params.batchCount;
+	alphaCount = params.alphaCount;
 	stride = nMax+1;
 	gamma = params.gamma;
 	output = params.output;
@@ -438,7 +439,11 @@ void BGEvolution::stdinInit()
 	output_file << "Batch count: " << batchCount << '\n';
 	output_file << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0"
 		<< std::setw(dist) << "Fluctuations n0" << std::setw(dist) << "Energy"
-		<<  std::setw(dist) << "Particle count" << std::setw(dist) << "Momentum" << '\n';
+		<<  std::setw(dist) << "Particle count" << std::setw(dist) << "Momentum";
+	if(interactionType=="contact")
+		output_file << std::setw(dist) << "Constant X" << '\n';
+	else
+		output_file << '\n';
 	output_file.close();
 }
 
@@ -461,7 +466,11 @@ void BGEvolution::printParameters()
 	std::cerr << "Batch count: " << batchCount << '\n' << '\n';
 	std::cerr << std::setw(dist) << "Batch number" << std::setw(dist) << std::setprecision(10) << "Average n0"
 		<< std::setw(dist) << "Fluctuations n0" << std::setw(dist) << "Energy"
-		<<  std::setw(dist) << "Particle count" << std::setw(dist) << "Momentum" << '\n';
+		<<  std::setw(dist) << "Particle count" << std::setw(dist) << "Momentum";
+	if(interactionType=="contact")
+		std::cerr << std::setw(dist) << "Constant X" << '\n';
+	else
+		std::cerr << '\n';
 }
 
 void BGEvolution::saveToFile(const int_fast32_t i)
@@ -470,7 +479,11 @@ void BGEvolution::saveToFile(const int_fast32_t i)
 	output_file.open(output,std::ios::app|std::ios::out);
 
 	output_file << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(16) << avgs.back() << std::setw(dist) << flucs.back()
-		<< std::setw(dist) << kineticEnergy()+potentialEnergy() <<  std::setw(dist) << nAll() << std::setw(dist) << momentum() << '\n';
+		<< std::setw(dist) << kineticEnergy()+potentialEnergy() <<  std::setw(dist) << nAll() << std::setw(dist) << momentum();
+	if(interactionType=="contact")
+		output_file << std::setw(dist) << constantx() << '\n';
+	else
+		output_file << '\n';
 	output_file.close();
 }
 
@@ -511,10 +524,12 @@ void BGEvolution::lastBatch()
 	output_file << nMax << '\n';
 	output_file << gamma << '\n';
 	output_file << interactionType << '\n';
+	output_file << alphaCount << '\n' << '\n';
+
 
 	if (interactionType=="custom")
 		for (int_fast32_t i=0;i<=2*nMax;++i)
-			output_file << '\n' << reducedCoefficients[i] << '\n';
+			output_file << reducedCoefficients[i] << '\n';
 
 	output_file << '\n';
 	for (int_fast32_t i=-nMax;i<=nMax;++i)

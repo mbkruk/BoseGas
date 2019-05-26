@@ -169,7 +169,12 @@ int main(int argc, const char *argv[])
 		evolution.calcAverages();
 		std::cerr  << std::setw(dist) << i+1 << std::setw(dist) << std::setprecision(16) << evolution.avgs[i] << std::setw(dist)
 			<< evolution.flucs[i] << std::setw(dist) << evolution.kineticEnergy()+evolution.potentialEnergy() <<  std::setw(dist)
-			<< evolution.nAll() << std::setw(dist) << evolution.momentum() << '\n';
+			<< evolution.nAll() << std::setw(dist) << evolution.momentum();
+		if(params.interactionType=="contact")
+			std::cerr << std::setw(dist) << evolution.constantx() << '\n';
+		else
+			std::cerr << '\n';
+
 		evolution.saveToFile(i);
 		if (i==params.batchCount-1)
 			evolution.lastBatch();

@@ -85,3 +85,42 @@ double BGEvolution::potentialEnergy()
 
 	return 0.0;
 }
+
+double BGEvolution::constantx()
+{
+	double x1 = 0.0;
+	for (int_fast32_t i=1;i<=nMax;++i)
+		x1 += i*i*i*((*(pCurrent+i))[0]*(*(pCurrent+i))[0]+(*(pCurrent+i))[1]*(*(pCurrent+i))[1])-i*i*i*((*(pCurrent+i))[2]*(*(pCurrent+i))[2]+(*(pCurrent+i))[3]*(*(pCurrent+i))[3]);
+
+	double x2 = 0.0;
+	for (int_fast32_t i=-nMax;i<=nMax;++i)
+	for (int_fast32_t j=-nMax;j<=nMax;++j)
+	for (int_fast32_t k=-nMax;k<=nMax;++k)
+	for (int_fast32_t l=-nMax;l<=nMax;++l)	
+		if(i+j==k+l)
+			x2 += l*((*(pCurrent+abs(i)))[1-sgn(i)]*(*(pCurrent+abs(j)))[1-sgn(j)]*(*(pCurrent+abs(k)))[1-sgn(k)]*(*(pCurrent+abs(l)))[1-sgn(l)]-
+			(*(pCurrent+abs(i)))[1-sgn(i)]*(*(pCurrent+abs(j)))[1-sgn(j)]*(*(pCurrent+abs(k)))[2-sgn(k)]*(*(pCurrent+abs(l)))[2-sgn(l)]+
+			(*(pCurrent+abs(i)))[1-sgn(i)]*(*(pCurrent+abs(j)))[2-sgn(j)]*(*(pCurrent+abs(k)))[1-sgn(k)]*(*(pCurrent+abs(l)))[2-sgn(l)]+
+			(*(pCurrent+abs(i)))[1-sgn(i)]*(*(pCurrent+abs(j)))[2-sgn(j)]*(*(pCurrent+abs(k)))[2-sgn(k)]*(*(pCurrent+abs(l)))[1-sgn(l)]+
+			(*(pCurrent+abs(i)))[2-sgn(i)]*(*(pCurrent+abs(j)))[1-sgn(j)]*(*(pCurrent+abs(k)))[1-sgn(k)]*(*(pCurrent+abs(l)))[2-sgn(l)]+
+			(*(pCurrent+abs(i)))[2-sgn(i)]*(*(pCurrent+abs(j)))[1-sgn(j)]*(*(pCurrent+abs(k)))[2-sgn(k)]*(*(pCurrent+abs(l)))[1-sgn(l)]-
+			(*(pCurrent+abs(i)))[2-sgn(i)]*(*(pCurrent+abs(j)))[2-sgn(j)]*(*(pCurrent+abs(k)))[1-sgn(k)]*(*(pCurrent+abs(l)))[1-sgn(l)]+
+			(*(pCurrent+abs(i)))[2-sgn(i)]*(*(pCurrent+abs(j)))[2-sgn(j)]*(*(pCurrent+abs(k)))[2-sgn(k)]*(*(pCurrent+abs(l)))[2-sgn(l)]);
+	
+	double x3 = 0.0;
+	for (int_fast32_t i=-nMax;i<=nMax;++i)
+	for (int_fast32_t j=-nMax;j<=nMax;++j)
+	for (int_fast32_t k=-nMax;k<=nMax;++k)
+	for (int_fast32_t l=-nMax;l<=nMax;++l)	
+		if(i+j==k+l)
+			x3 += i*((*(pCurrent+abs(i)))[1-sgn(i)]*(*(pCurrent+abs(j)))[1-sgn(j)]*(*(pCurrent+abs(k)))[1-sgn(k)]*(*(pCurrent+abs(l)))[1-sgn(l)]-
+			(*(pCurrent+abs(i)))[1-sgn(i)]*(*(pCurrent+abs(j)))[1-sgn(j)]*(*(pCurrent+abs(k)))[2-sgn(k)]*(*(pCurrent+abs(l)))[2-sgn(l)]+
+			(*(pCurrent+abs(i)))[1-sgn(i)]*(*(pCurrent+abs(j)))[2-sgn(j)]*(*(pCurrent+abs(k)))[1-sgn(k)]*(*(pCurrent+abs(l)))[2-sgn(l)]+
+			(*(pCurrent+abs(i)))[1-sgn(i)]*(*(pCurrent+abs(j)))[2-sgn(j)]*(*(pCurrent+abs(k)))[2-sgn(k)]*(*(pCurrent+abs(l)))[1-sgn(l)]+
+			(*(pCurrent+abs(i)))[2-sgn(i)]*(*(pCurrent+abs(j)))[1-sgn(j)]*(*(pCurrent+abs(k)))[1-sgn(k)]*(*(pCurrent+abs(l)))[2-sgn(l)]+
+			(*(pCurrent+abs(i)))[2-sgn(i)]*(*(pCurrent+abs(j)))[1-sgn(j)]*(*(pCurrent+abs(k)))[2-sgn(k)]*(*(pCurrent+abs(l)))[1-sgn(l)]-
+			(*(pCurrent+abs(i)))[2-sgn(i)]*(*(pCurrent+abs(j)))[2-sgn(j)]*(*(pCurrent+abs(k)))[1-sgn(k)]*(*(pCurrent+abs(l)))[1-sgn(l)]+
+			(*(pCurrent+abs(i)))[2-sgn(i)]*(*(pCurrent+abs(j)))[2-sgn(j)]*(*(pCurrent+abs(k)))[2-sgn(k)]*(*(pCurrent+abs(l)))[2-sgn(l)]);
+
+	return x1 + 4.0*gamma*x2 - gamma*x3 ;	
+}
