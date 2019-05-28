@@ -29,6 +29,7 @@ int main(int argc, const char *argv[])
 	params.batchCount = 9;
 	params.batchSize = 1024*64;
 	params.skip = 4;
+	params.skipOutput = 1;
 	params.interactionType = "contact";
 
 	po.addOption("-h","--help","produce help message",1,[&](const char *[]){help=true;return 0;});
@@ -136,6 +137,14 @@ int main(int argc, const char *argv[])
 		[&](const char *[])
 		{
 			params.outputStyle = "modified";
+			return 0;
+		}
+	);
+
+	po.addOption("-s","--skip","save every s-th set of alphas",2,
+		[&](const char *arg[])
+		{
+			params.skipOutput = std::stol(arg[1]);
 			return 0;
 		}
 	);

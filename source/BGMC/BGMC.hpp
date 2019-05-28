@@ -16,7 +16,7 @@ struct BGMCParameters
 	double gamma;
 	uint32_t seed;
 	uint32_t batchCount, batchSize;
-	uint32_t skip;
+	uint32_t skip, skipOutput;
 	std::string interactionType;
 	std::vector<double> interactionCoefficients;
 	std::string output, outputStyle;
