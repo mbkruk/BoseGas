@@ -121,6 +121,8 @@ void ClassicalFieldsMC::initialize(const BGMCParameters &params)
 		deltaDelta = 1.0;
 		delta = params.delta;
 	}
+	else
+		constDelta = false;
 
 	alpha.alpha.resize(2*nMax+1);
 	alpha0.alpha.resize(2*nMax+1);

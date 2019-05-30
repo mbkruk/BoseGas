@@ -69,21 +69,33 @@ int main(int argc, const char *argv[])
 			params.extraModePairs = std::stol(arg[1]);
 			if (params.extraModePairs>0 && params.extraModePairs<13 && !gammaSet)
 			{
-				double data[] = {
-					-0.0042195268250578314,
-					-0.005301892993535577,
-					-0.006442215631178419,
-					-0.007576297019707348,
-					-0.008651787441412463,
-					-0.009748261513109894,
-					-0.010805358641291169,
-					-0.011839481597843773,
-					-0.01283471902257864,
-					-0.013843079444467974,
-					-0.015014973084707317,
-					-0.015824500613224785
-				};
-				params.gamma = data[params.extraModePairs-1];
+				if (params.particleCount==100)
+				{
+					double data[] = {
+						-0.0042195268250578314,
+						-0.005301892993535577,
+						-0.006442215631178419,
+						-0.007576297019707348,
+						-0.008651787441412463,
+						-0.009748261513109894,
+						-0.010805358641291169,
+						-0.011839481597843773,
+						-0.01283471902257864,
+						-0.013843079444467974,
+						-0.015014973084707317,
+						-0.015824500613224785
+					};
+					params.gamma = data[params.extraModePairs-1];
+				}
+				else
+				if (params.particleCount==1000)
+				{
+					if (params.extraModePairs==1)
+						params.gamma = -0.000311067317842;
+					else
+					if (params.extraModePairs==4)
+						params.gamma = -0.00054157960972;
+				}
 			}
 			return 0;
 		}
