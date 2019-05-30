@@ -175,7 +175,8 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	while (std::abs(batchInfo.momentumMean)/batchInfo.momentumMeanStdDev>=3.0);
 
 	while (
-		std::abs(batchInfo.pAcceptMean-0.5)/batchInfo.pAcceptMeanStdDev>=4.0
+		(params.useConstDelta && batchInfo.pAcceptMeanStdDev>0.01)
+		|| (!params.useConstDelta && std::abs(batchInfo.pAcceptMean-0.5)/batchInfo.pAcceptMeanStdDev>=4.0)
 		|| std::abs(batchInfo.momentumMean)/batchInfo.momentumMeanStdDev>=3.0
 		)
 	{
@@ -203,10 +204,9 @@ int32_t bgSimulationCF(BGMCParameters &params)
 			double p = cfmc.momentum();
 			batchInfo.append(a,occupation,0.0,energy.totalEnergy,p);
 			if ((i+1)%params.skip==0)
-			{
 				totalInfo.append(a,occupation,0.0,energy.totalEnergy,p);
+			if ((i+1)%params.skipOutput==0)
 				alphas.push_back({energy.totalEnergy,p,0.0,0.0,0.0,cfmc.alphaCopy()});
-			}
 		}
 		batchInfo.process();
 		batchInfo.print(std::cout,batch);
@@ -235,7 +235,7 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	output_file << params.interactionType << '\n';
 
 	if (params.outputStyle=="modified")
-		output_file << alphas.size()/params.skipOutput << '\n' << '\n';
+		output_file << alphas.size() << '\n' << '\n';
 	else
 		output_file << "1" << '\n' << '\n';
 
@@ -243,16 +243,13 @@ int32_t bgSimulationCF(BGMCParameters &params)
 	{
 		for (int_fast32_t i=0; i<alphas.size();++i)
 		{
-			if ((i+1)%params.skipOutput==0)
-			{
-				for (int_fast32_t j=0; j<2*(params.nMax+params.extraModePairs)+1;++j)
-					output_file << std::real(alphas[i].alpha[j]) << " ";
+			for (int_fast32_t j=0; j<2*(params.nMax+params.extraModePairs)+1;++j)
+				output_file << std::real(alphas[i].alpha[j]) << " ";
 
-				for (int_fast32_t j=0; j<2*(params.nMax+params.extraModePairs)+1;++j)
-					output_file << std::imag(alphas[i].alpha[j]) << " ";
+			for (int_fast32_t j=0; j<2*(params.nMax+params.extraModePairs)+1;++j)
+				output_file << std::imag(alphas[i].alpha[j]) << " ";
 
-				output_file << '\n';
-			}
+			output_file << '\n';
 		}
 
 		output_file << '\n';

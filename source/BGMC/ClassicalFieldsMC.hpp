@@ -68,6 +68,7 @@ private:
 
 	double delta;
 	double deltaDelta;
+	bool constDelta;
 
 	int32_t baseNMax;
 	int32_t nMax;

@@ -29,8 +29,10 @@ int main(int argc, const char *argv[])
 	params.batchCount = 9;
 	params.batchSize = 1024*64;
 	params.skip = 4;
-	params.skipOutput = 1;
+	params.skipOutput = 4;
 	params.interactionType = "contact";
+	params.useConstDelta = false;
+	params.delta = 1.0;
 
 	po.addOption("-h","--help","produce help message",1,[&](const char *[]){help=true;return 0;});
 
@@ -133,7 +135,7 @@ int main(int argc, const char *argv[])
 		}
 	);
 
-	po.addOption("-mo","--modified-output","set modified output (for random walk and local fluctuations)",1,
+	po.addOption("-a","--alpha-output","output sets of alphas (for random walk and local fluctuations)",1,
 		[&](const char *[])
 		{
 			params.outputStyle = "modified";
@@ -141,10 +143,27 @@ int main(int argc, const char *argv[])
 		}
 	);
 
-	po.addOption("-s","--skip","save every s-th set of alphas",2,
+	po.addOption("-s","--skip","use every s-th alpha set to calculate averages and fluctuations",2,
 		[&](const char *arg[])
 		{
 			params.skipOutput = std::stol(arg[1]);
+			return 0;
+		}
+	);
+	
+	po.addOption("-O","--skip-output","save every O-th set of alphas",2,
+		[&](const char *arg[])
+		{
+			params.skipOutput = std::stol(arg[1]);
+			return 0;
+		}
+	);
+	
+	po.addOption("-d","--delta","MC delta",2,
+		[&](const char *arg[])
+		{
+			params.useConstDelta = true;
+			params.delta = std::stod(arg[1]);
 			return 0;
 		}
 	);

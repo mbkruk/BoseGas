@@ -20,6 +20,8 @@ struct BGMCParameters
 	std::string interactionType;
 	std::vector<double> interactionCoefficients;
 	std::string output, outputStyle;
+	bool useConstDelta;
+	double delta;
 };
 
 class BGMC
