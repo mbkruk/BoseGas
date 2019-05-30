@@ -65,6 +65,24 @@ int main(int argc, const char *argv[])
 		[&](const char *arg[])
 		{
 			params.extraModePairs = std::stol(arg[1]);
+			if (params.extraModePairs>0 && params.extraModePairs<13)
+			{
+				double data[] = {
+					-0.0042195268250578314,
+					-0.005301892993535577,
+					-0.006442215631178419,
+					-0.007576297019707348,
+					-0.008651787441412463,
+					-0.009748261513109894,
+					-0.010805358641291169,
+					-0.011839481597843773,
+					-0.01283471902257864,
+					-0.013843079444467974,
+					-0.015014973084707317,
+					-0.015824500613224785
+				};
+				params.gamma = data[params.extraModePairs-1];
+			}
 			return 0;
 		}
 	);
@@ -143,7 +161,7 @@ int main(int argc, const char *argv[])
 		}
 	);
 
-	po.addOption("-s","--skip","use every s-th alpha set to calculate averages and fluctuations",2,
+	po.addOption("-s","--skip <s>","use every s-th alpha set to calculate averages and fluctuations",2,
 		[&](const char *arg[])
 		{
 			params.skipOutput = std::stol(arg[1]);
@@ -151,7 +169,7 @@ int main(int argc, const char *argv[])
 		}
 	);
 	
-	po.addOption("-O","--skip-output","save every O-th set of alphas",2,
+	po.addOption("-O","--skip-output <s>","save every s-th set of alphas",2,
 		[&](const char *arg[])
 		{
 			params.skipOutput = std::stol(arg[1]);
@@ -159,7 +177,7 @@ int main(int argc, const char *argv[])
 		}
 	);
 	
-	po.addOption("-d","--delta","MC delta",2,
+	po.addOption("-d","--delta <number>","MC delta",2,
 		[&](const char *arg[])
 		{
 			params.useConstDelta = true;
