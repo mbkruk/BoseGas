@@ -33,6 +33,8 @@ int main(int argc, const char *argv[])
 	params.interactionType = "contact";
 	params.useConstDelta = false;
 	params.delta = 1.0;
+	
+	bool gammaSet = false;
 
 	po.addOption("-h","--help","produce help message",1,[&](const char *[]){help=true;return 0;});
 
@@ -65,7 +67,7 @@ int main(int argc, const char *argv[])
 		[&](const char *arg[])
 		{
 			params.extraModePairs = std::stol(arg[1]);
-			if (params.extraModePairs>0 && params.extraModePairs<13)
+			if (params.extraModePairs>0 && params.extraModePairs<13 && !gammaSet)
 			{
 				double data[] = {
 					-0.0042195268250578314,
@@ -118,6 +120,7 @@ int main(int argc, const char *argv[])
 		[&](const char *arg[])
 		{
 			params.gamma = std::stod(arg[1]);
+			gammaSet = true;
 			return 0;
 		}
 	);
