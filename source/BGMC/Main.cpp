@@ -101,7 +101,7 @@ int main(int argc, const char *argv[])
 		}
 	);
 
-	po.addOption("-b","--beta <number>","set beta(inverse temperature)",2,
+	po.addOption("-b","--beta <number>","set beta (inverse temperature)",2,
 		[&](const char *arg[])
 		{
 			params.beta = std::stod(arg[1]);
@@ -110,7 +110,7 @@ int main(int argc, const char *argv[])
 		}
 	);
 
-	po.addOption("-T","--temperature <number>","set temperature)",2,
+	po.addOption("-T","--temperature <number>","set temperature",2,
 		[&](const char *arg[])
 		{
 			params.beta = 1.0/std::stod(arg[1]);
@@ -119,7 +119,7 @@ int main(int argc, const char *argv[])
 		}
 	);
 
-	po.addOption("-S","--batch-size <count>","set batch size",2,
+	po.addOption("-S","--batch-size <count>","set batch size (default is 65536)",2,
 		[&](const char *arg[])
 		{
 			params.batchSize = std::stol(arg[1]);
@@ -127,6 +127,13 @@ int main(int argc, const char *argv[])
 		}
 	);
 
+	po.addOption("-B","--batch-count <count>","set batch count (default is 8)",2,
+		[&](const char *arg[])
+		{
+			params.batchCount = std::stol(arg[1])+1;
+			return 0;
+		}
+	);
 
 	po.addOption("-g","--gamma <number>","interaction strength",2,
 		[&](const char *arg[])
@@ -176,7 +183,7 @@ int main(int argc, const char *argv[])
 		}
 	);
 
-	po.addOption("-s","--skip <s>","use every s-th alpha set to calculate averages and fluctuations",2,
+	po.addOption("-s","--skip <s>","use every s-th alpha set to calculate averages and fluctuations (default is 4)",2,
 		[&](const char *arg[])
 		{
 			params.skipOutput = std::stol(arg[1]);
@@ -184,7 +191,7 @@ int main(int argc, const char *argv[])
 		}
 	);
 	
-	po.addOption("-O","--skip-output <s>","save every s-th set of alphas",2,
+	po.addOption("-O","--skip-output <s>","save every s-th set of alphas (default is 4)",2,
 		[&](const char *arg[])
 		{
 			params.skipOutput = std::stol(arg[1]);
@@ -192,7 +199,7 @@ int main(int argc, const char *argv[])
 		}
 	);
 	
-	po.addOption("-d","--delta <number>","MC delta",2,
+	po.addOption("-d","--delta <number>","set constant MC delta",2,
 		[&](const char *arg[])
 		{
 			params.useConstDelta = true;

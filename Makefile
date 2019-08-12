@@ -4,7 +4,8 @@ DEBUG=
 
 GPP_VERSION=$(shell g++ -dumpversion)
 STD=$(shell if [ "$(GPP_VERSION)" \> "5" ]; then echo "-std=c++11"; else echo "-std=c++0x"; fi)
-CFLAGS=-mavx -O3
+#CFLAGS=-mavx -O3
+CFLAGS=-march=native -O3
 LDFLAGS=$(shell if [ "$(GPP_VERSION)" \> "5" ]; then echo "-flto"; else echo ""; fi)
 LIBS=-lpthread $(shell if [ "$(GPP_VERSION)" \> "5" ]; then echo ""; else echo "-lrt"; fi)
 
