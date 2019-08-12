@@ -66,6 +66,7 @@ private:
 	double beta;
 	double gamma;
 
+	double deltaCoeff;
 	double delta;
 	double deltaDelta;
 	bool constDelta;
@@ -91,7 +92,7 @@ public:
 
 	inline double getInitialDetla() const
 	{
-		return 0.76*sqrt(2*baseNMax+1)/(double)(1*(nMax-baseNMax)+1)/sqrt(1.0+std::abs(N*gamma));
+		return deltaCoeff*sqrt(2*baseNMax+1)/(double)(1*(nMax-baseNMax)+1)/sqrt(1.0+std::abs(N*gamma));
 	}
 
 	inline double getDelta() const

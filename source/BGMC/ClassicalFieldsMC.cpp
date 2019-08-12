@@ -114,6 +114,7 @@ void ClassicalFieldsMC::initialize(const BGMCParameters &params)
 	gamma = params.gamma;
 	baseNMax = params.nMax;
 	nMax = params.nMax+params.extraModePairs;
+	deltaCoeff = 0.76/params.betaRatio;
 	deltaDelta = pow(10.0,4.0/params.batchSize);
 	if (params.useConstDelta)
 	{

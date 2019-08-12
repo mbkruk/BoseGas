@@ -33,6 +33,7 @@ int main(int argc, const char *argv[])
 	params.interactionType = "contact";
 	params.useConstDelta = false;
 	params.delta = 1.0;
+	params.betaRatio = 1.0;
 	
 	bool gammaSet = false;
 
@@ -54,11 +55,44 @@ int main(int argc, const char *argv[])
 		}
 	);
 
-	po.addOption("-n","--nmax <count>","set Nmax",2,
+	po.addOption("-n","--nmax <count>","set Nmax and beta optimized for groud state occupation",2,
 		[&](const char *arg[])
 		{
 			params.nMax = std::stol(arg[1]);
 			params.beta = kCutoffConst/params.nMax/params.nMax;
+			return 0;
+		}
+	);
+	
+	po.addOption("-w","--hwhm-cutoff <count>","set Nmax>=2 and beta optimized for HWHM",2,
+		[&](const char *arg[])
+		{
+			double mult[] = {
+				0.0,
+				0.0,
+				0.42522181368612244,
+				0.6184360448913647,
+				0.7626433192054166,
+				0.8812398719072574,
+				0.9827619383397457,
+				1.0708576691904812,
+				1.1478793269503433,
+				1.215539164651759,
+				1.2750995561728224,
+				1.3278649752647078,
+				1.3753891615680687,
+				1.4189174944290668,
+				1.4587286304414895,
+				1.4940182544970568
+			};
+			params.nMax = std::stol(arg[1]);
+			if (params.nMax<2)
+			{
+				std::cerr << "invalid Nmax" << std::endl;
+				return 1;
+			}
+			params.betaRatio = mult[params.nMax];
+			params.beta = kCutoffConst*mult[params.nMax]/params.nMax/params.nMax;
 			return 0;
 		}
 	);

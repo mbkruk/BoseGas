@@ -22,6 +22,7 @@ struct BGMCParameters
 	std::string output, outputStyle;
 	bool useConstDelta;
 	double delta;
+	double betaRatio;
 };
 
 class BGMC
