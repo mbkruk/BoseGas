@@ -32,6 +32,7 @@ int main(int argc, const char *argv[])
 	params.skipOutput = 4;
 	params.interactionType = "contact";
 	params.useConstDelta = false;
+	params.sort = true;
 	params.delta = 1.0;
 	params.betaRatio = 1.0;
 	
@@ -209,10 +210,11 @@ int main(int argc, const char *argv[])
 		}
 	);
 
-	po.addOption("-a","--alpha-output","output sets of alphas (for random walk and local fluctuations)",1,
+	po.addOption("-a","--alpha-output","output unsorted sets of alphas (for random walk and local fluctuations)",1,
 		[&](const char *[])
 		{
 			params.outputStyle = "modified";
+			params.sort = false;
 			return 0;
 		}
 	);

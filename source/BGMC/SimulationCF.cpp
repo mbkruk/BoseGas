@@ -224,7 +224,8 @@ int32_t bgSimulationCF(BGMCParameters &params)
 		ar.distance = sqrt(sqr(ar.Ed)+sqr(ar.Pd));
 	}
 
-	std::sort(alphas.begin(),alphas.end(),[](const AlphaRecord &a, const AlphaRecord &b){return a.distance<b.distance;});
+	if (params.sort)
+		std::sort(alphas.begin(),alphas.end(),[](const AlphaRecord &a, const AlphaRecord &b){return a.distance<b.distance;});
 
 	std::fstream output_file;
 	output_file.open(params.output,std::ios::out);

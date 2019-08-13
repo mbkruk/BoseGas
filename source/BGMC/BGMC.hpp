@@ -21,6 +21,7 @@ struct BGMCParameters
 	std::vector<double> interactionCoefficients;
 	std::string output, outputStyle;
 	bool useConstDelta;
+	bool sort;
 	double delta;
 	double betaRatio;
 };
