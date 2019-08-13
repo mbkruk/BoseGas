@@ -205,7 +205,7 @@ int32_t bgSimulationCF(BGMCParameters &params)
 			batchInfo.append(a,occupation,0.0,energy.totalEnergy,p);
 			if ((i+1)%params.skip==0)
 				totalInfo.append(a,occupation,0.0,energy.totalEnergy,p);
-			if ((i+1)%params.skipOutput==0)
+			if ((i+1)%params.skipOutput==0 && batch>=params.firstBatch)
 				alphas.push_back({energy.totalEnergy,p,0.0,0.0,0.0,cfmc.alphaCopy()});
 		}
 		batchInfo.process();

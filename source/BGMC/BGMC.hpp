@@ -17,6 +17,7 @@ struct BGMCParameters
 	uint32_t seed;
 	uint32_t batchCount, batchSize;
 	uint32_t skip, skipOutput;
+	uint32_t firstBatch;
 	std::string interactionType;
 	std::vector<double> interactionCoefficients;
 	std::string output, outputStyle;

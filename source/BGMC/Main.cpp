@@ -30,6 +30,7 @@ int main(int argc, const char *argv[])
 	params.batchSize = 1024*64;
 	params.skip = 4;
 	params.skipOutput = 4;
+	params.firstBatch = 1;
 	params.interactionType = "contact";
 	params.useConstDelta = false;
 	params.sort = true;
@@ -240,6 +241,14 @@ int main(int argc, const char *argv[])
 		{
 			params.useConstDelta = true;
 			params.delta = std::stod(arg[1]);
+			return 0;
+		}
+	);
+	
+	po.addOption("-f","--first-batch <n>","collect alphas only from batch n and later",2,
+		[&](const char *arg[])
+		{
+			params.firstBatch = std::stoi(arg[1]);
 			return 0;
 		}
 	);
