@@ -5,6 +5,8 @@
 
 #include "Random.hpp"
 
+static thread_local uint32_t perThreadCounter = 0;
+
 uint32_t generateSeed()
 {
 	union
@@ -20,5 +22,6 @@ uint32_t generateSeed()
 	seed ^= 179426341ll*getpid();
 	std::thread::id this_id = std::this_thread::get_id();
 	seed ^= static_cast<uint32_t>(179426339ll*std::hash<std::thread::id>{}(this_id));
+	seed ^= 1073807359ll*perThreadCounter++;
 	return seed;
 }

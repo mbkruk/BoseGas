@@ -10,8 +10,8 @@ class Barrier
 {
 private:
 
-	uint_fast32_t threadCount = 1;
-	uint_fast32_t counter = 1;
+	uint_fast32_t threadCount;
+	uint_fast32_t counter;
 	uint_fast32_t generation = 0;
 	std::mutex m;
 	std::condition_variable cv;
@@ -57,8 +57,9 @@ public:
 
 	Barrier(const Barrier&) = delete;
 
-	inline Barrier()
+	inline Barrier(uint_fast32_t threadCount_=1)
 	{
+		setThreadCount(threadCount_);
 	}
 };
 

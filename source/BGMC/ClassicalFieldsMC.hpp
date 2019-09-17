@@ -90,6 +90,8 @@ private:
 
 public:
 
+	static double getOptimalContactGamma(BGMCParameters &params);
+
 	inline double getInitialDetla() const
 	{
 		return deltaCoeff*sqrt(2*baseNMax+1)/(double)(1*(nMax-baseNMax)+1)/sqrt(1.0+std::abs(N*gamma));
@@ -125,6 +127,11 @@ public:
 	inline void setInteraction(Interaction *pNewInteraction)
 	{
 		pInteraction = pNewInteraction;
+	}
+	
+	inline Interaction* getInteraction()
+	{
+		return pInteraction;
 	}
 
 	double momentum() override;

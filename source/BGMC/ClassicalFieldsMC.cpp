@@ -259,3 +259,38 @@ ClassicalFieldsMC::CustomInteraction::CustomInteraction(const std::vector<double
 		coefficients[coefficients_.size()-1-i] = coefficients_[i];
 	}
 }
+
+double ClassicalFieldsMC::getOptimalContactGamma(BGMCParameters &params)
+{
+	if (params.extraModePairs>0 && params.extraModePairs<13)
+	{
+		if (params.particleCount==100)
+		{
+			double data[] = {
+				-0.0042195268250578314,
+				-0.005301892993535577,
+				-0.006442215631178419,
+				-0.007576297019707348,
+				-0.008651787441412463,
+				-0.009748261513109894,
+				-0.010805358641291169,
+				-0.011839481597843773,
+				-0.01283471902257864,
+				-0.013843079444467974,
+				-0.015014973084707317,
+				-0.015824500613224785
+			};
+			return data[params.extraModePairs-1];
+		}
+		else
+		if (params.particleCount==1000)
+		{
+			if (params.extraModePairs==1)
+				return -0.000311067317842;
+			else
+			if (params.extraModePairs==4)
+				return -0.00054157960972;
+		}
+	}
+	return 0.0;
+}

@@ -10,6 +10,7 @@
 #include "../BGCommon/Random.hpp"
 #include "BGMC.hpp"
 #include "ClassicalFieldsMC.hpp"
+#include "CFSimulation.hpp"
 
 int main(int argc, const char *argv[])
 {
@@ -26,7 +27,7 @@ int main(int argc, const char *argv[])
 	params.beta = 1.0;
 	params.gamma = 0.0;
 	params.seed = generateSeed();
-	params.batchCount = 9;
+	params.batchCount = 8;
 	params.batchSize = 1024*64;
 	params.skip = 4;
 	params.skipOutput = 4;
@@ -38,6 +39,7 @@ int main(int argc, const char *argv[])
 	params.betaRatio = 1.0;
 	
 	bool gammaSet = false;
+	bool compare = false;
 
 	po.addOption("-h","--help","produce help message",1,[&](const char *[]){help=true;return 0;});
 
@@ -103,36 +105,8 @@ int main(int argc, const char *argv[])
 		[&](const char *arg[])
 		{
 			params.extraModePairs = std::stol(arg[1]);
-			if (params.extraModePairs>0 && params.extraModePairs<13 && !gammaSet)
-			{
-				if (params.particleCount==100)
-				{
-					double data[] = {
-						-0.0042195268250578314,
-						-0.005301892993535577,
-						-0.006442215631178419,
-						-0.007576297019707348,
-						-0.008651787441412463,
-						-0.009748261513109894,
-						-0.010805358641291169,
-						-0.011839481597843773,
-						-0.01283471902257864,
-						-0.013843079444467974,
-						-0.015014973084707317,
-						-0.015824500613224785
-					};
-					params.gamma = data[params.extraModePairs-1];
-				}
-				else
-				if (params.particleCount==1000)
-				{
-					if (params.extraModePairs==1)
-						params.gamma = -0.000311067317842;
-					else
-					if (params.extraModePairs==4)
-						params.gamma = -0.00054157960972;
-				}
-			}
+			if (!gammaSet)
+				params.gamma = ClassicalFieldsMC::getOptimalContactGamma(params);
 			return 0;
 		}
 	);
@@ -252,6 +226,14 @@ int main(int argc, const char *argv[])
 			return 0;
 		}
 	);
+	
+	po.addOption("-c","--compare","compare energies",1,
+		[&](const char *arg[])
+		{
+			compare = true;
+			return 0;
+		}
+	);
 
 	po.addOption("","",nullptr,1,
 		[&](const char *arg[])
@@ -327,7 +309,14 @@ int main(int argc, const char *argv[])
 	std::cerr << "beta = " << params.beta << std::endl;
 	std::cerr << "seed = " << params.seed << std::endl;*/
 
-	if (r=bgSimulationCF(params))
+	if (compare)
+	{
+		params.sort = false;
+		if (r=bgCFCompare(params))
+			return r;
+	}
+	else
+	if (r=bgSingleCFSimulation(params))
 		return r;
 
 	return 0;
