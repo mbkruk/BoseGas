@@ -26,6 +26,7 @@ struct BGMCParameters
 	std::string output, outputStyle;
 	bool useConstDelta;
 	bool sort;
+	bool acceptTest;
 	double delta;
 	double betaRatio;
 };

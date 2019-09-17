@@ -20,6 +20,9 @@ public:
 	BGMC::Energy energy;
 	std::vector<double> occupation;
 	
+	std::vector<double> delta;
+	double deltaMean, deltaStdDev, deltaMeanStdDev;
+
 	void batch(bool collect);
 
 	void finish();

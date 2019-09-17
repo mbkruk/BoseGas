@@ -234,6 +234,14 @@ int main(int argc, const char *argv[])
 			return 0;
 		}
 	);
+	
+	po.addOption("-A","--acceptance","acceptance test",1,
+		[&](const char *arg[])
+		{
+			params.acceptTest = true;
+			return 0;
+		}
+	);
 
 	po.addOption("","",nullptr,1,
 		[&](const char *arg[])

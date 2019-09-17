@@ -55,9 +55,11 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 
 	occupation.resize(2*cfmc.getNMax()+1);
 
+	uint32_t cnt = 0;
 	do
 	{
-		cfmc.generate(random);
+		if ((cnt%2)==0)
+			cfmc.generate(random);
 		batchInfo.clear(cfmc.getNMax());
 		for (uint32_t i=0;i<params.batchSize;++i)
 		{
@@ -69,8 +71,9 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 		}
 		batchInfo.process();
 		initCallback(*this);
+		++cnt;
 	}
-	while (std::abs(batchInfo.momentumMean)/batchInfo.momentumMeanStdDev>=3.0);
+	while (std::abs(batchInfo.momentumMean)/batchInfo.momentumMeanStdDev>=3.0 && !params.acceptTest);
 
 	while (
 		(params.useConstDelta && batchInfo.pAcceptMeanStdDev>0.01)
@@ -78,15 +81,19 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 		|| std::abs(batchInfo.momentumMean)/batchInfo.momentumMeanStdDev>=3.0
 		)
 	{
+		delta.clear();
 		batchInfo.clear(cfmc.getNMax());
 		for (uint32_t i=0;i<params.batchSize;++i)
 		{
+			delta.push_back(cfmc.getDelta());
 			double a = cfmc.steps(random,1);
 			cfmc.energy(energy);
 			cfmc.getOccupation(occupation);
 			double p = cfmc.momentum();
 			batchInfo.append(a,occupation,0.0,energy.totalEnergy,p);
 		}
+		meanStdDev(delta,&deltaMean,&deltaStdDev);
+		deltaMeanStdDev = deltaStdDev/sqrt(delta.size()-1);
 		batchInfo.process();
 		acceptCallback(*this);
 	}
@@ -143,6 +150,12 @@ int32_t bgSingleCFSimulation(BGMCParameters &params)
 		[](CFSimulation &sim){sim.batchInfo.print(std::cout,"init");},
 		[](CFSimulation &sim){sim.batchInfo.print(std::cout,"accept");}
 	);
+	
+	if (params.acceptTest)
+	{
+		std::cerr << "delta = " << sim.deltaMean << " +/- " << sim.deltaMeanStdDev << std::endl;
+		return 0;
+	}
 
 	for (uint32_t batch=0;batch<params.batchCount;++batch)
 	{

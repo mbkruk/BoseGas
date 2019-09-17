@@ -101,6 +101,11 @@ public:
 	{
 		return delta;
 	}
+	
+	inline void setDelta(double d)
+	{
+		delta = d;
+	}
 
 	inline double getRelativeDelta() const
 	{
