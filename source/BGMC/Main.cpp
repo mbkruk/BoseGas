@@ -35,6 +35,7 @@ int main(int argc, const char *argv[])
 	params.interactionType = "contact";
 	params.useConstDelta = false;
 	params.sort = true;
+	params.acceptTest = false;
 	params.delta = 1.0;
 	params.betaRatio = 1.0;
 	
@@ -259,12 +260,12 @@ int main(int argc, const char *argv[])
 	if (r=po.parseOptions(argc,argv))
 		return r;
 
-	if (help)
+	if (help || argc<=1)
 	{
 		std::cerr << "usage: bgmc <options> ..." << std::endl;
 		std::cerr << "options:" << std::endl;
 		po.printDescriptions(std::cerr);
-		return 0;
+		return argc<=1 ? 1 : 0;
 	}
 
 	cf.addAttribute("N",

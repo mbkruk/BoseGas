@@ -5,6 +5,7 @@
 #include <random>
 #include <functional>
 
+#include "../BGCommon/Math.hpp"
 #include "BGMC.hpp"
 #include "ClassicalFieldsMC.hpp"
 
@@ -22,6 +23,9 @@ public:
 	
 	std::vector<double> delta;
 	double deltaMean, deltaStdDev, deltaMeanStdDev;
+
+	std::vector<double> batchRound;
+	LinearRegression lr;
 
 	void batch(bool collect);
 

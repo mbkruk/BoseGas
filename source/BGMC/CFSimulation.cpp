@@ -43,6 +43,11 @@ ClassicalFieldsMC::Interaction* CFSimulation::createInteraction(const BGMCParame
 	return pInteraction;
 }
 
+inline double regressionScore(const BGMCParameters &params, const LinearRegression &lr, const SimulationInfo &batchInfo)
+{
+	return (lr.a*params.batchSize+lr.b-batchInfo.energyMean)/sqrt(sqr(lr.ua*params.batchSize)+sqr(lr.ub)+sqr(batchInfo.energyMeanStdDev));
+}
+
 int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<void(CFSimulation&sim)> initCallback, std::function<void(CFSimulation&sim)> acceptCallback)
 {
 	params = params_;
@@ -54,6 +59,12 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 	totalInfo.clear(cfmc.getNMax());
 
 	occupation.resize(2*cfmc.getNMax()+1);
+	
+	batchRound.clear();
+	for (uint32_t i=0;i<params.batchSize;i+=params.skip)
+		batchRound.push_back((double)i-0.5*(params.batchSize-1));
+
+	double score;
 
 	uint32_t cnt = 0;
 	do
@@ -62,6 +73,7 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 			cfmc.generate(random);
 		batchInfo.clear(cfmc.getNMax());
 		for (uint32_t i=0;i<params.batchSize;++i)
+		if (((i+1)%params.skip)==0)
 		{
 			double a = cfmc.steps(random,1);
 			cfmc.energy(energy);
@@ -69,7 +81,11 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 			double p = cfmc.momentum();
 			batchInfo.append(a,occupation,0.0,energy.totalEnergy,p);
 		}
+		else
+			cfmc.steps(random,1);
 		batchInfo.process();
+		linearRegression(batchRound,batchInfo.energy,lr);
+		score = regressionScore(params,lr,batchInfo);
 		initCallback(*this);
 		++cnt;
 	}
@@ -79,11 +95,13 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 		(params.useConstDelta && batchInfo.pAcceptMeanStdDev>0.01)
 		|| (!params.useConstDelta && std::abs(batchInfo.pAcceptMean-0.5)/batchInfo.pAcceptMeanStdDev>=4.0)
 		|| std::abs(batchInfo.momentumMean)/batchInfo.momentumMeanStdDev>=3.0
+		|| fabs(score)>=3.0
 		)
 	{
 		delta.clear();
 		batchInfo.clear(cfmc.getNMax());
 		for (uint32_t i=0;i<params.batchSize;++i)
+		if (((i+1)%params.skip)==0)
 		{
 			delta.push_back(cfmc.getDelta());
 			double a = cfmc.steps(random,1);
@@ -92,9 +110,13 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 			double p = cfmc.momentum();
 			batchInfo.append(a,occupation,0.0,energy.totalEnergy,p);
 		}
+		else
+			cfmc.steps(random,1);
 		meanStdDev(delta,&deltaMean,&deltaStdDev);
 		deltaMeanStdDev = deltaStdDev/sqrt(delta.size()-1);
 		batchInfo.process();
+		linearRegression(batchRound,batchInfo.energy,lr);
+		score = regressionScore(params,lr,batchInfo);
 		acceptCallback(*this);
 	}
 	
@@ -108,12 +130,15 @@ void CFSimulation::batch(bool collect)
 	{
 		double a = cfmc.steps(random,1);
 		cfmc.energy(energy);
-		cfmc.getOccupation(occupation);
 		double p = cfmc.momentum();
-		batchInfo.append(a,occupation,0.0,energy.totalEnergy,p);
-		if ((i+1)%params.skip==0 && collect)
-			totalInfo.append(a,occupation,0.0,energy.totalEnergy,p);
-		if ((i+1)%params.skipOutput==0 && collect)
+		if ((i+1)%params.skip==0)
+		{
+			cfmc.getOccupation(occupation);
+			batchInfo.append(a,occupation,0.0,energy.totalEnergy,p);
+			if (collect)
+				totalInfo.append(a,occupation,0.0,energy.totalEnergy,p);
+		}
+		if (params.skipOutput && (i+1)%params.skipOutput==0 && collect)
 			alphas.push_back({energy.totalEnergy,p,0.0,0.0,0.0,cfmc.alphaCopy()});
 	}
 	batchInfo.process();

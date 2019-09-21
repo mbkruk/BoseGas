@@ -9,6 +9,13 @@ inline double sqr(double x)
 	return x*x;
 }
 
+inline double sign(double x)
+{
+	if (x<0.0)
+		return -1.0;
+	return 1.0;
+}
+
 inline double complexNorm2Sum(const std::vector<std::complex<double> > &data)
 {
 	double sum = 0.0;
@@ -34,8 +41,8 @@ struct LinearRegression
 {
 	double avgX, stdX;
 	double avgY, stdY;
-	double a;
-	double b;
+	double a, ua;
+	double b, ub;
 };
 
 inline void linearRegression(const std::vector<double>& x, const std::vector<double>& y, LinearRegression &lr)
@@ -65,4 +72,14 @@ inline void linearRegression(const std::vector<double>& x, const std::vector<dou
 
 	lr.a = numerator/denominator;
 	lr.b = lr.avgY-lr.a*lr.avgX;
+
+	numerator = 0.0;
+	for(size_t i=0;i<x.size();++i)
+		numerator += sqr(y[i]-lr.b-lr.a*x[i]);
+	lr.ua = sqrt(numerator/denominator/(double)(x.size()-2));
+
+	numerator = 0.0;
+	for(size_t i=0;i<x.size();++i)
+		numerator += x[i]*x[i];
+	lr.ub = lr.ua*sqrt(numerator/(double)x.size());
 }
