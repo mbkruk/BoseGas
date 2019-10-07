@@ -59,9 +59,9 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 	totalInfo.clear(cfmc.getNMax());
 
 	occupation.resize(2*cfmc.getNMax()+1);
-	
+
 	batchRound.clear();
-	for (uint32_t i=0;i<params.batchSize;i+=params.skip)
+	for (uint32_t i=0;i<params.batchSize;++i)
 		batchRound.push_back((double)i-0.5*(params.batchSize-1));
 
 	double score;
@@ -72,7 +72,7 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 		if ((cnt%2)==0)
 			cfmc.generate(random);
 		batchInfo.clear(cfmc.getNMax());
-		for (uint32_t i=0;i<params.batchSize;++i)
+		for (uint32_t i=0;i<params.batchSize*params.skip;++i)
 		if (((i+1)%params.skip)==0)
 		{
 			double a = cfmc.steps(random,1);
@@ -100,7 +100,7 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 	{
 		delta.clear();
 		batchInfo.clear(cfmc.getNMax());
-		for (uint32_t i=0;i<params.batchSize;++i)
+		for (uint32_t i=0;i<params.batchSize*params.skip;++i)
 		if (((i+1)%params.skip)==0)
 		{
 			delta.push_back(cfmc.getDelta());
@@ -119,14 +119,14 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 		score = regressionScore(params,lr,batchInfo);
 		acceptCallback(*this);
 	}
-	
+
 	return 0;
 }
 
 void CFSimulation::batch(bool collect)
 {
 	batchInfo.clear(cfmc.getNMax());
-	for (uint32_t i=0;i<params.batchSize;++i)
+	for (uint32_t i=0;i<params.batchSize*params.skip;++i)
 	{
 		double a = cfmc.steps(random,1);
 		cfmc.energy(energy);
@@ -164,6 +164,12 @@ void CFSimulation::release()
 	cfmc.release();
 }
 
+static int32_t optSkip(const BGMCParameters &params, const CFSimulation &sim)
+{
+	double D = (2.0/M_PI)*sim.deltaMean*sqrt(2*(params.nMax+params.extraModePairs)+1);
+	return (int32_t)(M_PI*sqrt((double)params.particleCount)/D+0.5);
+}
+
 int32_t bgSingleCFSimulation(BGMCParameters &params)
 {
 	CFSimulation sim;
@@ -175,14 +181,15 @@ int32_t bgSingleCFSimulation(BGMCParameters &params)
 		[](CFSimulation &sim){sim.batchInfo.print(std::cout,"init");},
 		[](CFSimulation &sim){sim.batchInfo.print(std::cout,"accept");}
 	);
-	
+
 	if (params.acceptTest)
 	{
-		std::cerr << "delta = " << sim.deltaMean << " +/- " << sim.deltaMeanStdDev << std::endl;
+		std::cout << "delta = " << sim.deltaMean << " +/- " << sim.deltaMeanStdDev << std::endl;
+		std::cout << "optimal skip parameter: " << optSkip(params,sim) << std::endl;
 		return 0;
 	}
 
-	for (uint32_t batch=0;batch<params.batchCount;++batch)
+	for (uint32_t batch=1;batch<=params.batchCount;++batch)
 	{
 		sim.batch(batch>=params.firstBatch);
 		sim.batchInfo.print(std::cout,batch);
@@ -232,7 +239,7 @@ int32_t bgSingleCFSimulation(BGMCParameters &params)
 					output_file << params.interactionCoefficients[i] << '\n';
 				output_file << '\n';
 			}
-			
+
 			for (int_fast32_t i=0; i<2*(params.nMax+params.extraModePairs)+1;++i)
 				output_file << std::real(sim.alphas[0].alpha[i]) << '\n';
 
@@ -246,7 +253,7 @@ int32_t bgSingleCFSimulation(BGMCParameters &params)
 		sim.totalInfo.print(output_file,"total");
 		output_file << std::endl;
 		sim.totalInfo.printOccupation(output_file);
-		
+
 		output_file.close();
 	}
 
@@ -262,6 +269,7 @@ void bgCFCompareThread(uint32_t index, const BGMCParameters &params_, CFSimulati
 	if (index!=0)
 		params.seed = generateSeed();
 	params.extraModePairs += (int32_t)index-1;
+	params.skip += 10*params.extraModePairs;
 
 	sim.cfmc.setInteraction(CFSimulation::createInteraction(params));
 	sim.initialize(params,
@@ -279,9 +287,16 @@ void bgCFCompareThread(uint32_t index, const BGMCParameters &params_, CFSimulati
 		}
 	);
 
+	params.skip = optSkip(params,sim);
+	{
+		std::lock_guard<std::mutex> lk(logMutex);
+		std::cerr << "skip " << index << " " << params.skip <<std::endl;
+	}
+	sim.params = params;
+
 	barrier.wait();
-	
-	for (uint32_t batch=0;run.load();++batch)
+
+	for (uint32_t batch=1;run.load();++batch)
 	{
 		sim.batch(batch>=params.firstBatch);
 		sim.totalInfo.process();
@@ -289,7 +304,7 @@ void bgCFCompareThread(uint32_t index, const BGMCParameters &params_, CFSimulati
 		barrier.wait();
 
 		if (index==0)
-		{			
+		{
 			if (!sim.totalInfo.energy.empty())
 			{
 				for (uint32_t i=0;i<3;++i)

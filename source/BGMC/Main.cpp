@@ -28,7 +28,7 @@ int main(int argc, const char *argv[])
 	params.gamma = 0.0;
 	params.seed = generateSeed();
 	params.batchCount = 8;
-	params.batchSize = 1024*64;
+	params.batchSize = 1024*16;
 	params.skip = 4;
 	params.skipOutput = 4;
 	params.firstBatch = 1;
@@ -38,7 +38,7 @@ int main(int argc, const char *argv[])
 	params.acceptTest = false;
 	params.delta = 1.0;
 	params.betaRatio = 1.0;
-	
+
 	bool gammaSet = false;
 	bool compare = false;
 
@@ -68,7 +68,7 @@ int main(int argc, const char *argv[])
 			return 0;
 		}
 	);
-	
+
 	po.addOption("-w","--hwhm-cutoff <count>","set Nmax>=2 and beta optimized for HWHM",2,
 		[&](const char *arg[])
 		{
@@ -141,7 +141,7 @@ int main(int argc, const char *argv[])
 	po.addOption("-B","--batch-count <count>","set batch count (default is 8)",2,
 		[&](const char *arg[])
 		{
-			params.batchCount = std::stol(arg[1])+1;
+			params.batchCount = std::stol(arg[1]);
 			return 0;
 		}
 	);
@@ -198,11 +198,11 @@ int main(int argc, const char *argv[])
 	po.addOption("-s","--skip <s>","use every s-th alpha set to calculate averages and fluctuations (default is 4)",2,
 		[&](const char *arg[])
 		{
-			params.skipOutput = std::stol(arg[1]);
+			params.skip = std::stol(arg[1]);
 			return 0;
 		}
 	);
-	
+
 	po.addOption("-O","--skip-output <s>","save every s-th set of alphas (default is 4)",2,
 		[&](const char *arg[])
 		{
@@ -210,7 +210,7 @@ int main(int argc, const char *argv[])
 			return 0;
 		}
 	);
-	
+
 	po.addOption("-d","--delta <number>","set constant MC delta",2,
 		[&](const char *arg[])
 		{
@@ -219,7 +219,7 @@ int main(int argc, const char *argv[])
 			return 0;
 		}
 	);
-	
+
 	po.addOption("-f","--first-batch <n>","collect alphas only from batch n and later",2,
 		[&](const char *arg[])
 		{
@@ -227,7 +227,7 @@ int main(int argc, const char *argv[])
 			return 0;
 		}
 	);
-	
+
 	po.addOption("-c","--compare","compare energies",1,
 		[&](const char *arg[])
 		{
@@ -235,7 +235,7 @@ int main(int argc, const char *argv[])
 			return 0;
 		}
 	);
-	
+
 	po.addOption("-A","--acceptance","acceptance test",1,
 		[&](const char *arg[])
 		{

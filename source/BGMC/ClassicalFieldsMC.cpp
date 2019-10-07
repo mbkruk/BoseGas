@@ -56,8 +56,10 @@ int32_t ClassicalFieldsMC::steps(std::mt19937 &random, uint32_t count)
 			{
 				angle = d2pi(random);
 				length = delta*d1(random);
-				alpha0.alpha[i].real(alpha.alpha[alpha.alpha.size()-i-1].real()+length*cos(angle));
-				alpha0.alpha[i].imag(alpha.alpha[alpha.alpha.size()-i-1].imag()+length*sin(angle));
+				//alpha0.alpha[i].real(alpha.alpha[alpha.alpha.size()-i-1].real()+length*cos(angle));
+				//alpha0.alpha[i].imag(alpha.alpha[alpha.alpha.size()-i-1].imag()+length*sin(angle));
+				alpha0.alpha[i].real(alpha.alpha[i].real()+length*cos(angle));
+				alpha0.alpha[i].imag(alpha.alpha[i].imag()+length*sin(angle));
 			}
 			alpha0.normalize(N);
 			if (nTry>=1000)
