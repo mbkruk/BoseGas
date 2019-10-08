@@ -52,7 +52,7 @@ struct SimulationInfo
 	double energyMean, energyStdDev, energyMeanStdDev;
 	std::vector<double> momentum;
 	double momentumMean, momentumStdDev, momentumMeanStdDev;
-	
+
 	inline void append(double accepted, const std::vector<double> &occupation, double A, double E, double P)
 	{
 		pAccept.push_back(accepted);
@@ -62,7 +62,7 @@ struct SimulationInfo
 		energy.push_back(E);
 		momentum.push_back(P);
 	}
-	
+
 	template<typename X> void print(std::ostream &os, X batch)
 	{
 		os << std::setw(8) << batch
@@ -73,7 +73,7 @@ struct SimulationInfo
 			<< " " << std::setw(15) << momentumMean << std::setw(15) << momentumMeanStdDev << std::setw(15) << momentumStdDev
 			<< std::endl;
 	}
-	
+
 	void process();
 	void clear(int32_t nMax);
 	static void printHead(std::ostream &os);

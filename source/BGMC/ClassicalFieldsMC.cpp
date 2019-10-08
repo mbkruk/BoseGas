@@ -105,8 +105,6 @@ void ClassicalFieldsMC::generate(std::mt19937 &random)
 	}
 	alpha.normalize(N);
 	alpha.update(pInteraction);
-	if (!constDelta)
-		delta = getInitialDetla();
 }
 
 void ClassicalFieldsMC::initialize(const BGMCParameters &params)
@@ -117,7 +115,6 @@ void ClassicalFieldsMC::initialize(const BGMCParameters &params)
 	baseNMax = params.nMax;
 	nMax = params.nMax+params.extraModePairs;
 	deltaCoeff = 0.76/params.betaRatio;
-	deltaDelta = pow(10.0,4.0/params.batchSize);
 	if (params.useConstDelta)
 	{
 		constDelta = true;
@@ -125,7 +122,11 @@ void ClassicalFieldsMC::initialize(const BGMCParameters &params)
 		delta = params.delta;
 	}
 	else
+	{
 		constDelta = false;
+		deltaDelta = pow(10.0,4.0/params.batchSize);
+		delta = getInitialDetla();
+	}
 
 	alpha.alpha.resize(2*nMax+1);
 	alpha0.alpha.resize(2*nMax+1);

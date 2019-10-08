@@ -48,7 +48,14 @@ inline double regressionScore(const BGMCParameters &params, const LinearRegressi
 	return (lr.a*params.batchSize+lr.b-batchInfo.energyMean)/sqrt(sqr(lr.ua*params.batchSize)+sqr(lr.ub)+sqr(batchInfo.energyMeanStdDev));
 }
 
-int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<void(CFSimulation&sim)> initCallback, std::function<void(CFSimulation&sim)> acceptCallback)
+static int32_t optSkip(const BGMCParameters &params, const CFSimulation &sim)
+{
+	double D = (2.0/M_PI)*sim.deltaMean*sqrt(2*(params.nMax+params.extraModePairs)+1);
+	double N = M_PI*sqrt((double)params.particleCount);
+	return std::max((int32_t)(N/std::max(D,N/1024.0)+0.5),4);
+}
+
+int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<void(CFSimulation&sim)> initCallback, std::function<void(CFSimulation&sim)> prepareCallback)
 {
 	params = params_;
 
@@ -64,17 +71,19 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 	for (uint32_t i=0;i<params.batchSize;++i)
 		batchRound.push_back((double)i-0.5*(params.batchSize-1));
 
-	double score;
+	double lrscore;
 
 	uint32_t cnt = 0;
 	do
 	{
+		delta.clear();
 		if ((cnt%2)==0)
 			cfmc.generate(random);
 		batchInfo.clear(cfmc.getNMax());
 		for (uint32_t i=0;i<params.batchSize*params.skip;++i)
 		if (((i+1)%params.skip)==0)
 		{
+			delta.push_back(cfmc.getDelta());
 			double a = cfmc.steps(random,1);
 			cfmc.energy(energy);
 			cfmc.getOccupation(occupation);
@@ -83,19 +92,30 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 		}
 		else
 			cfmc.steps(random,1);
+		meanStdDev(delta,&deltaMean,&deltaStdDev);
+		deltaMeanStdDev = deltaStdDev/sqrt(delta.size()-1);
 		batchInfo.process();
 		linearRegression(batchRound,batchInfo.energy,lr);
-		score = regressionScore(params,lr,batchInfo);
+		lrscore = regressionScore(params,lr,batchInfo);
 		initCallback(*this);
 		++cnt;
 	}
-	while (std::abs(batchInfo.momentumMean)/batchInfo.momentumMeanStdDev>=3.0 && !params.acceptTest);
+	while (!params.acceptTest
+		&& (
+			(
+				params.useConstDelta && batchInfo.pAcceptMeanStdDev>0.01)
+				|| (!params.useConstDelta && std::abs(batchInfo.pAcceptMean-0.5)/batchInfo.pAcceptMeanStdDev>=3.0)
+			)
+		);
+
+	params.skip = optSkip(params,*this);
+	std::cerr << "set skip " << params.skip << std::endl;
 
 	while (
 		(params.useConstDelta && batchInfo.pAcceptMeanStdDev>0.01)
-		|| (!params.useConstDelta && std::abs(batchInfo.pAcceptMean-0.5)/batchInfo.pAcceptMeanStdDev>=4.0)
+		|| (!params.useConstDelta && std::abs(batchInfo.pAcceptMean-0.5)/batchInfo.pAcceptMeanStdDev>=3.0)
 		|| std::abs(batchInfo.momentumMean)/batchInfo.momentumMeanStdDev>=3.0
-		|| fabs(score)>=3.0
+		|| fabs(lrscore)>=3.0
 		)
 	{
 		delta.clear();
@@ -116,8 +136,8 @@ int32_t CFSimulation::initialize(const BGMCParameters &params_, std::function<vo
 		deltaMeanStdDev = deltaStdDev/sqrt(delta.size()-1);
 		batchInfo.process();
 		linearRegression(batchRound,batchInfo.energy,lr);
-		score = regressionScore(params,lr,batchInfo);
-		acceptCallback(*this);
+		lrscore = regressionScore(params,lr,batchInfo);
+		prepareCallback(*this);
 	}
 
 	return 0;
@@ -164,12 +184,6 @@ void CFSimulation::release()
 	cfmc.release();
 }
 
-static int32_t optSkip(const BGMCParameters &params, const CFSimulation &sim)
-{
-	double D = (2.0/M_PI)*sim.deltaMean*sqrt(2*(params.nMax+params.extraModePairs)+1);
-	return (int32_t)(M_PI*sqrt((double)params.particleCount)/D+0.5);
-}
-
 int32_t bgSingleCFSimulation(BGMCParameters &params)
 {
 	CFSimulation sim;
@@ -179,7 +193,7 @@ int32_t bgSingleCFSimulation(BGMCParameters &params)
 	sim.cfmc.setInteraction(CFSimulation::createInteraction(params));
 	sim.initialize(params,
 		[](CFSimulation &sim){sim.batchInfo.print(std::cout,"init");},
-		[](CFSimulation &sim){sim.batchInfo.print(std::cout,"accept");}
+		[](CFSimulation &sim){sim.batchInfo.print(std::cout,"prepare");}
 	);
 
 	if (params.acceptTest)
@@ -269,7 +283,6 @@ void bgCFCompareThread(uint32_t index, const BGMCParameters &params_, CFSimulati
 	if (index!=0)
 		params.seed = generateSeed();
 	params.extraModePairs += (int32_t)index-1;
-	params.skip += 10*params.extraModePairs;
 
 	sim.cfmc.setInteraction(CFSimulation::createInteraction(params));
 	sim.initialize(params,
@@ -283,16 +296,9 @@ void bgCFCompareThread(uint32_t index, const BGMCParameters &params_, CFSimulati
 		{
 			std::lock_guard<std::mutex> lk(logMutex);
 			std::cerr << std::setw(8) << index;
-			sim.batchInfo.print(std::cerr,"accept");
+			sim.batchInfo.print(std::cerr,"prepare");
 		}
 	);
-
-	params.skip = optSkip(params,sim);
-	{
-		std::lock_guard<std::mutex> lk(logMutex);
-		std::cerr << "skip " << index << " " << params.skip <<std::endl;
-	}
-	sim.params = params;
 
 	barrier.wait();
 
@@ -310,7 +316,7 @@ void bgCFCompareThread(uint32_t index, const BGMCParameters &params_, CFSimulati
 				for (uint32_t i=0;i<3;++i)
 				{
 					std::lock_guard<std::mutex> lk(logMutex);
-					std::cerr << std::setw(8) << i;
+					std::cerr << std::setw(7) << i;
 					pSims[i].totalInfo.print(std::cerr,batch-params.firstBatch+1);
 				}
 
