@@ -302,7 +302,7 @@ void bgCFCompareThread(uint32_t index, const BGMCParameters &params_, CFSimulati
 
 	barrier.wait();
 
-	for (uint32_t batch=1;run.load();++batch)
+	for (uint32_t batch=1;run.load() && batch<=params.batchCount;++batch)
 	{
 		sim.batch(batch>=params.firstBatch);
 		sim.totalInfo.process();
