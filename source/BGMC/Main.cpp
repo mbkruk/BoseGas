@@ -30,7 +30,7 @@ int main(int argc, const char *argv[])
 	params.batchCount = 8;
 	params.batchSize = 1024*16;
 	params.skip = 4;
-	params.skipOutput = 4;
+	params.skipOutput = 1;
 	params.firstBatch = 1;
 	params.interactionType = "contact";
 	params.useConstDelta = false;

@@ -156,10 +156,12 @@ void CFSimulation::batch(bool collect)
 			cfmc.getOccupation(occupation);
 			batchInfo.append(a,occupation,0.0,energy.totalEnergy,p);
 			if (collect)
+			{
 				totalInfo.append(a,occupation,0.0,energy.totalEnergy,p);
+				if (params.skipOutput && (i/params.skip+1)%params.skipOutput==0)
+					alphas.push_back({energy.totalEnergy,p,0.0,0.0,0.0,cfmc.alphaCopy()});
+			}
 		}
-		if (params.skipOutput && (i+1)%params.skipOutput==0 && collect)
-			alphas.push_back({energy.totalEnergy,p,0.0,0.0,0.0,cfmc.alphaCopy()});
 	}
 	batchInfo.process();
 }
